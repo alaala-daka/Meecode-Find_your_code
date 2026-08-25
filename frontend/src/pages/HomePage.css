@@ -1,0 +1,17 @@
+/* src/pages/HomePage.css —— 入场动画：错落淡入 + 8px 上浮，逐卡 30ms（规范 §4.5） */
+.feed-enter .repo-card {
+  animation: card-enter 0.25s var(--ease) backwards;
+}
+.feed-enter .repo-card:nth-child(1) { animation-delay: 0ms; }
+.feed-enter .repo-card:nth-child(2) { animation-delay: 30ms; }
+.feed-enter .repo-card:nth-child(3) { animation-delay: 60ms; }
+.feed-enter .repo-card:nth-child(4) { animation-delay: 90ms; }
+.feed-enter .repo-card:nth-child(5) { animation-delay: 120ms; }
+.feed-enter .repo-card:nth-child(6) { animation-delay: 150ms; }
+.feed-enter .repo-card:nth-child(7) { animation-delay: 180ms; }
+.feed-enter .repo-card:nth-child(8) { animation-delay: 210ms; }
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.feed-sentinel { height: 1px; }
