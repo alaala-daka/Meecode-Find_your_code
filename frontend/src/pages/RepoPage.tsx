@@ -12,6 +12,8 @@ import TopBar from '../components/TopBar'
 import { useAuthStore } from '../store/authStore'
 import { languageColor } from '../theme/languageColors'
 import { formatCount, formatTime } from '../utils/format'
+// 显式导入所复用样式（.source-badge）的定义文件，避免依赖打包顺序
+import '../components/RepoCard.css'
 import './RepoPage.css'
 
 const TAB_ITEMS = [

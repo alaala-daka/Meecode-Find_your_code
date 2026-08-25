@@ -7,6 +7,9 @@ import LoginModal from '../components/LoginModal'
 import RepoCover from '../components/RepoCover'
 import TopBar from '../components/TopBar'
 import { useAuthStore } from '../store/authStore'
+// 显式导入所复用样式的定义文件（.cat-pill/.source-badge），避免依赖打包顺序、兼容未来路由级代码分割
+import '../components/CategoryBar.css'
+import '../components/RepoCard.css'
 import './SubmitPage.css'
 
 const STEPS = ['选仓库', '编辑推广页', '发布']
