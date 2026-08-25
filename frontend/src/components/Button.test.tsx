@@ -21,4 +21,8 @@ describe('Button', () => {
     render(<Button variant="secondary">去 GitHub</Button>)
     expect(screen.getByRole('button')).toHaveClass('btn', 'btn-secondary')
   })
+  it('外部 className 与基础类合并（不覆盖，Task 12 依赖）', () => {
+    render(<Button className="btn-like is-on">点赞</Button>)
+    expect(screen.getByRole('button')).toHaveClass('btn', 'btn-primary', 'btn-like', 'is-on')
+  })
 })

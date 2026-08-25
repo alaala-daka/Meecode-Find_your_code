@@ -7,10 +7,10 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean
 }
 
-export default function Button({ variant = 'primary', loading = false, children, disabled, ...rest }: Props) {
+export default function Button({ variant = 'primary', loading = false, className, children, disabled, ...rest }: Props) {
   return (
     <button
-      className={`btn btn-${variant}`}
+      className={`btn btn-${variant}${className ? ` ${className}` : ''}`}
       disabled={disabled || loading}
       {...rest}
     >
