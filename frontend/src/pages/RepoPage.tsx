@@ -1,5 +1,5 @@
 // src/pages/RepoPage.tsx —— 规范 §7.3
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { RepoDetail, RepoFile, RepoTreeItem } from '../api/types'
@@ -31,6 +31,7 @@ export default function RepoPage() {
   const [liked, setLiked] = useState(false)
   const [faved, setFaved] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
+  const fileReqRef = useRef(0) // 文件请求令牌：丢弃过期响应，防切仓库/快速点文件时旧响应覆盖
 
   useEffect(() => {
     let alive = true
@@ -48,10 +49,14 @@ export default function RepoPage() {
   }, [repoId])
 
   async function selectFile(path: string) {
+    const req = ++fileReqRef.current
     setFileError(false)
     try {
-      setFile(await api.repoFile(repoId, path))
+      const f = await api.repoFile(repoId, path)
+      if (req !== fileReqRef.current) return // 已有更新的请求，丢弃过期响应
+      setFile(f)
     } catch {
+      if (req !== fileReqRef.current) return
       setFileError(true)
       setFile(null)
     }
