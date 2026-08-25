@@ -1,5 +1,5 @@
 // src/pages/HomePage.test.tsx
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useFeedStore } from '../store/feedStore'
@@ -15,7 +15,7 @@ describe('HomePage', () => {
     render(<HomePage />, { wrapper: MemoryRouter })
     // 仓库名同时出现在封面 SVG 与标题链接中，故用 findAllByText（同 Task 8 约定）
     expect(await screen.findAllByText('mini-agent')).not.toHaveLength(0)
-    expect(screen.getAllByText('tinyfetch').length).toBeGreaterThanOrEqual(2)
+    expect((await screen.findAllByText('tinyfetch')).length).toBeGreaterThanOrEqual(2)
   })
 
   it('哨兵进视口触发翻页', async () => {
@@ -23,7 +23,7 @@ describe('HomePage', () => {
     render(<HomePage />, { wrapper: MemoryRouter })
     await screen.findAllByText('mini-agent')
     expect(useFeedStore.getState().cards).toHaveLength(8)
-    io.triggerEnter()
+    await act(async () => io.triggerEnter()) // act 包裹，避免外部状态更新警告
     await screen.findAllByText('wasm-notes')
     expect(useFeedStore.getState().cards).toHaveLength(12)
   })
