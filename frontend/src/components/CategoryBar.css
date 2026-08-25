@@ -15,7 +15,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  overflow: hidden;
+  /* 不设 overflow:hidden：会裁掉「更多」下拉菜单；分类为胶囊且 ≤10 项，不会横向溢出 */
 }
 @media (min-width: 1560px) { .category-inner { width: 1180px; } }
 .cat-pill {
