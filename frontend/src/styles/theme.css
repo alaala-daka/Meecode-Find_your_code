@@ -1,1 +1,50 @@
-/* src/styles/theme.css —— Task 2 填充 */
+/* src/styles/theme.css —— 设计规范 §3–§4 全量 token，唯一裸色值出处之一 */
+:root {
+  /* 背景（规范 §3.1） */
+  --bg1: #FFFEFB;
+  --bg2: #FCF7EA;
+  --bg3: #FAF2E0;
+  /* 文字（规范 §3.2） */
+  --text1: #2F2A22;
+  --text2: #6E6558;
+  --text3: #9C9284;
+  --text4: #C9C0B0;
+  /* 品牌蓝（规范 §3.3） */
+  --brand_blue: #0E61AC;
+  --brand_blue_hover: #3B82C4;
+  --brand_blue_active: #0A4E8A;
+  --brand_blue_disabled: #A8C6E2;
+  --brand_blue_thin: #E8F1FA;
+  --brand_blue_line: #C4D9EC;
+  /* 暖琥珀（规范 §3.4） */
+  --brand_amber: #DA8E2D;
+  --brand_amber_hover: #E5A94F;
+  --brand_amber_active: #B87420;
+  --brand_amber_thin: #FBF0DC;
+  /* 功能色（规范 §3.5） */
+  --stress_red: #E0604F;
+  --success_green: #4FB477;
+  --operate_orange: #F09B3C;
+  --badge_red: #EE6B60;
+  /* 分割线（规范 §3.6） */
+  --line_light: #F1E8D4;
+  --line_regular: #E5DAC2;
+  --line_bold: #CFC2A8;
+  /* 圆角（规范 §4.2） */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  /* 阴影（规范 §4.3） */
+  --shadow_float: 0 4px 24px rgba(62, 48, 24, 0.08);
+  --shadow_dropdown: 0 2px 12px rgba(62, 48, 24, 0.06);
+  --focus_ring: 0 0 0 2px #E8F1FA;
+  /* 动效（规范 §4.5） */
+  --time-fast: 0.2s;
+  --time-slow: 0.3s;
+  --ease: cubic-bezier(0, 0, 0.2, 1);
+  /* 遮罩与半透明（规范 §3.7、§6.2、§8.3）——裸色值集中在本文件 */
+  --mask_cover: rgba(43, 32, 16, 0.55);
+  --mask_modal: rgba(43, 32, 16, 0.4);
+  --topbar_bg: rgba(255, 254, 251, 0.85);
+}

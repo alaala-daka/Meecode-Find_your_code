@@ -1,1 +1,28 @@
-/* src/styles/base.css —— Task 2 填充 */
+/* src/styles/base.css —— reset 与全局基调（规范 §4.1） */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background-color: var(--bg3);
+  color: var(--text1);
+  font-family: -apple-system, BlinkMacSystemFont, Helvetica Neue, Helvetica,
+    Arial, PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; font-size: inherit; }
+ul, ol { list-style: none; }
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus_ring);
+  border-radius: var(--radius-sm);
+}
+
+code, pre {
+  font-family: ui-monospace, Consolas, "Courier New", monospace;
+}
+
+/* 全站共用的淡入关键帧（规范 §4.5 大面积淡入 .3s） */
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
