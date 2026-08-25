@@ -1,0 +1,29 @@
+/* src/components/Button.css —— 规范 §6.6：高 40px 圆角 8px，三态变色，无涟漪 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color var(--time-fast), color var(--time-fast);
+}
+.btn:disabled { cursor: not-allowed; }
+.btn-primary { background: var(--brand_blue); color: var(--bg1); }
+.btn-primary:hover:not(:disabled) { background: var(--brand_blue_hover); }
+.btn-primary:active:not(:disabled) { background: var(--brand_blue_active); }
+.btn-primary:disabled { background: var(--brand_blue_disabled); }
+.btn-secondary { background: var(--brand_blue_thin); color: var(--brand_blue); }
+.btn-secondary:hover:not(:disabled) { background: var(--brand_blue_line); }
+.btn-ghost { background: transparent; color: var(--text1); border: 1px solid var(--line_regular); }
+.btn-ghost:hover:not(:disabled) { background: var(--brand_blue_thin); }
+.btn-sm { height: 32px; padding: 0 14px; font-size: 13px; }
+.btn-spinner {
+  width: 14px; height: 14px;
+  border: 2px solid currentColor; border-top-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.8s linear infinite;
+}
+@keyframes btn-spin { to { transform: rotate(360deg); } }

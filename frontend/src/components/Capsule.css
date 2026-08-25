@@ -1,0 +1,9 @@
+/* src/components/Capsule.css */
+.capsule {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+}

@@ -1,0 +1,13 @@
+/* src/components/Pagination.css */
+.pagination { display: flex; gap: 8px; justify-content: center; margin-top: 32px; }
+.page-item {
+  min-width: 36px; height: 36px;
+  padding: 0 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line_regular);
+  background: var(--bg1);
+  color: var(--text1);
+  transition: background-color var(--time-fast), color var(--time-fast);
+}
+.page-item:hover { background: var(--brand_blue_thin); }
+.page-item.is-active { background: var(--brand_blue); border-color: var(--brand_blue); color: var(--bg1); }
