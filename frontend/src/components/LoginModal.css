@@ -1,0 +1,24 @@
+/* src/components/LoginModal.css —— 居中弹层，圆角 14px，--shadow_float，.3s 淡入 */
+.login-mask {
+  position: fixed; inset: 0;
+  background: var(--mask_modal);
+  display: flex; align-items: center; justify-content: center;
+  animation: fade-in var(--time-slow) var(--ease);
+  z-index: 100;
+}
+.login-modal {
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  padding: 40px 48px;
+  background: var(--bg1);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow_float);
+}
+.login-logo {
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--brand_blue);
+  color: var(--bg1);
+  border-radius: var(--radius-lg);
+  font-size: 24px; font-weight: 500;
+}
+.login-tip { color: var(--text2); font-size: 13px; }

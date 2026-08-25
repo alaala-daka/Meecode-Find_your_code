@@ -1,0 +1,11 @@
+/* src/components/Skeleton.css —— 微光扫过 1.2s（规范 §4.5）；.repo-grid 在 RepoCard.css 定义 */
+.card-skeleton { display: flex; flex-direction: column; gap: 8px; }
+.sk-cover { aspect-ratio: 16 / 9; border-radius: var(--radius-lg); }
+.sk-line { height: 14px; border-radius: var(--radius-sm); }
+.sk-line.short { height: 12px; }
+.shimmer {
+  background: linear-gradient(90deg, var(--line_light) 25%, var(--bg2) 50%, var(--line_light) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
