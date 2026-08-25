@@ -1,0 +1,9 @@
+/* src/App.css —— 页面壳：内容区宽度纪律（规范 §5） */
+.page-shell {
+  width: 1020px;
+  margin: 0 auto;
+  padding: 20px 0 60px;
+}
+@media (min-width: 1560px) {
+  .page-shell { width: 1180px; }
+}
