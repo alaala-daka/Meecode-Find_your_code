@@ -51,6 +51,7 @@ export default function SearchPage() {
     setLoading(false)
   }, [q, sort, page])
 
+  useEffect(() => { setPage(1) }, [q])
   useEffect(() => { void run() }, [run])
 
   return (

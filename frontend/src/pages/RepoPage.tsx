@@ -1,10 +1,11 @@
 // src/pages/RepoPage.tsx —— 规范 §7.3
 import { useEffect, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { RepoDetail, RepoFile, RepoTreeItem } from '../api/types'
 import Button from '../components/Button'
 import CodeView from '../components/CodeView'
+import EmptyState from '../components/EmptyState'
 import FileTree from '../components/FileTree'
 import LoginModal from '../components/LoginModal'
 import Tabs from '../components/Tabs'
@@ -24,8 +25,10 @@ const TAB_ITEMS = [
 export default function RepoPage() {
   const { id } = useParams()
   const repoId = Number(id)
+  const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const [detail, setDetail] = useState<RepoDetail | null>(null)
+  const [loadError, setLoadError] = useState(false)
   const [tab, setTab] = useState('files')
   const [tree, setTree] = useState<RepoTreeItem[]>([])
   const [file, setFile] = useState<RepoFile | null>(null)
@@ -37,7 +40,9 @@ export default function RepoPage() {
 
   useEffect(() => {
     let alive = true
-    api.repo(repoId).then((d) => { if (!alive) return; setDetail(d) })
+    api.repo(repoId)
+      .then((d) => { if (!alive) return; setDetail(d) })
+      .catch(() => { if (alive) setLoadError(true) })
     api.repoTree(repoId).then((t) => {
       if (!alive) return
       setTree(t)
@@ -80,6 +85,17 @@ export default function RepoPage() {
     const next = !faved
     setFaved(next)
     await api.interact(repoId, 'favorite', next)
+  }
+
+  if (loadError) {
+    return (
+      <>
+        <TopBar />
+        <main className="page-shell">
+          <EmptyState title="仓库不存在或已下架" actionLabel="回首页" onAction={() => navigate('/')} />
+        </main>
+      </>
+    )
   }
 
   if (!detail) {

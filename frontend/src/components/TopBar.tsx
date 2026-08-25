@@ -53,7 +53,7 @@ export default function TopBar() {
             placeholder="搜索仓库、标签、一句话卖点"
             aria-label="搜索"
           />
-          <button className="search-btn" onClick={submitSearch} aria-label="搜索">
+          <button className="search-btn" onClick={submitSearch} aria-label="搜索按钮">
             <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
               <circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" strokeWidth="2" />
               <line x1="11" y1="11" x2="14" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />

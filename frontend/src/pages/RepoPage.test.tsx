@@ -66,4 +66,10 @@ describe('RepoPage', () => {
     await screen.findByText('tinyfetch')
     expect(screen.getByText('作者未开启讨论')).toBeInTheDocument()
   })
+
+  it('仓库不存在显示空态并可回首页', async () => {
+    renderAt('/repo/999')
+    expect(await screen.findByText('仓库不存在或已下架')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '回首页' })).toBeInTheDocument()
+  })
 })

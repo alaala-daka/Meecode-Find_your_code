@@ -1,6 +1,6 @@
 // src/pages/HomePage.tsx —— 规范 §7.1
 import { useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import CategoryBar from '../components/CategoryBar'
 import EmptyState from '../components/EmptyState'
 import ErrorBanner from '../components/ErrorBanner'
@@ -14,11 +14,14 @@ export default function HomePage() {
   const { cards, loading, error, hasMore, load, loadMore } = useFeedStore()
   const sentinelRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const cat = params.get('cat')
 
   useEffect(() => {
-    // 仅在从未加载过时拉取；空态/错误态由测试预置 state（page>0）不会被覆盖
-    if (useFeedStore.getState().page === 0) void load(null)
-  }, [load])
+    const s = useFeedStore.getState()
+    // 首次加载，或 URL 分类与 store 不一致时重载（预置空态/错误态的测试 page>0 且 category 一致，不会误触发）
+    if (s.page === 0 || s.category !== cat) void load(cat)
+  }, [cat, load])
 
   useEffect(() => {
     const el = sentinelRef.current

@@ -1,7 +1,7 @@
 // src/pages/SearchPage.test.tsx
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import SearchPage from './SearchPage'
 
@@ -11,6 +11,22 @@ function renderAt(url: string) {
       <Routes>
         <Route path="/search" element={<SearchPage />} />
       </Routes>
+    </MemoryRouter>
+  )
+}
+
+function NavProbe() {
+  const navigate = useNavigate()
+  return <button onClick={() => navigate('/search?q=agent')}>换词探针</button>
+}
+
+function renderAtWithNav(url: string) {
+  return render(
+    <MemoryRouter initialEntries={[url]}>
+      <Routes>
+        <Route path="/search" element={<SearchPage />} />
+      </Routes>
+      <NavProbe />
     </MemoryRouter>
   )
 }
@@ -38,6 +54,17 @@ describe('SearchPage', () => {
     await userEvent.click(screen.getByRole('tab', { name: '最多 star' }))
     const cards = await screen.findAllByTestId(/^search-card-/)
     expect(cards.length).toBeGreaterThan(0)
+  })
+
+  it('换关键词重置页码', async () => {
+    // 'e' 命中 11 条（两页）：先翻到第 2 页，再改 q，页码必须回 1，否则第 2 页空白死页
+    renderAtWithNav('/search?q=e')
+    await screen.findAllByTestId(/^search-card-/)
+    await userEvent.click(screen.getByRole('button', { name: '2' }))
+    expect((await screen.findAllByTestId(/^search-card-/)).length).toBe(3)
+    await userEvent.click(screen.getByRole('button', { name: '换词探针' }))
+    expect(await screen.findByTestId('search-card-1')).toBeInTheDocument()
+    expect(screen.getByText('搜索「agent」· 共 1 个结果')).toBeInTheDocument()
   })
 
   it('无结果显示空态', async () => {

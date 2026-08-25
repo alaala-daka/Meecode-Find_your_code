@@ -55,5 +55,6 @@ describe('SubmitPage', () => {
     await userEvent.type(screen.getByLabelText('一句话卖点'), '手写的一句话卖点')
     await userEvent.click(screen.getByRole('button', { name: '发布' }))
     expect(await screen.findByText('已发布，进入首发曝光窗口')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '查看我的主页' })).toBeInTheDocument()
   })
 })

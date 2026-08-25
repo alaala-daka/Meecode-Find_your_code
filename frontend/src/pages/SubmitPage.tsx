@@ -1,5 +1,6 @@
 // src/pages/SubmitPage.tsx —— 规范 §7.4：三步向导
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 import type { RepoCardData } from '../api/types'
 import Button from '../components/Button'
@@ -16,6 +17,7 @@ const STEPS = ['选仓库', '编辑推广页', '发布']
 const TAGLINE_MAX = 40
 
 export default function SubmitPage() {
+  const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const [step, setStep] = useState(0)
   const [repos, setRepos] = useState<RepoCardData[]>([])
@@ -147,6 +149,7 @@ export default function SubmitPage() {
             <p className="done-emoji" aria-hidden="true">🎉</p>
             <p className="done-title">已发布，进入首发曝光窗口</p>
             <p className="done-sub">72 小时内你的仓库会获得加权与保底曝光</p>
+            <Button onClick={() => navigate(`/user/${user.login}`)}>查看我的主页</Button>
           </section>
         )}
       </main>

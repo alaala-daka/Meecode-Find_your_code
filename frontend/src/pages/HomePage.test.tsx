@@ -30,9 +30,23 @@ describe('HomePage', () => {
 
   it('空分类显示空态与推广按钮', async () => {
     useFeedStore.setState({ cards: [], loading: false, hasMore: false, page: 1, category: '其他' })
-    render(<HomePage />, { wrapper: MemoryRouter })
+    render(<HomePage />, {
+      wrapper: ({ children }) => (
+        <MemoryRouter initialEntries={['/?cat=其他']}>{children}</MemoryRouter>
+      ),
+    })
     expect(await screen.findByText('这个分类还没有仓库')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '推广我的仓库' })).toBeInTheDocument()
+  })
+
+  it('深链带分类参数时按分类加载', async () => {
+    render(<HomePage />, {
+      wrapper: ({ children }) => (
+        <MemoryRouter initialEntries={['/?cat=AI 与机器学习']}>{children}</MemoryRouter>
+      ),
+    })
+    expect((await screen.findAllByText('mini-agent')).length).toBeGreaterThanOrEqual(2)
+    expect(useFeedStore.getState().category).toBe('AI 与机器学习')
   })
 
   it('错误态显示重试', async () => {
