@@ -4,6 +4,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { RepoCardData, UserProfile } from '../api/types'
 import EmptyState from '../components/EmptyState'
+import ErrorBanner from '../components/ErrorBanner'
 import RepoCard from '../components/RepoCard'
 import Tabs from '../components/Tabs'
 import TopBar from '../components/TopBar'
@@ -26,16 +27,22 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [editingBio, setEditingBio] = useState(false)
   const [lists, setLists] = useState<Record<'repos' | 'favs' | 'history', RepoCardData[]>>({ repos: [], favs: [], history: [] })
+  const [loadError, setLoadError] = useState(false)
 
   const loadAll = useCallback(async () => {
-    const [p, repos, favs, history] = await Promise.all([
-      api.userProfile(login),
-      api.userRepos(login),
-      api.userFavorites(login),
-      api.userHistory(login),
-    ])
-    setProfile(p)
-    setLists({ repos, favs, history })
+    setLoadError(false)
+    try {
+      const [p, repos, favs, history] = await Promise.all([
+        api.userProfile(login),
+        api.userRepos(login),
+        api.userFavorites(login),
+        api.userHistory(login),
+      ])
+      setProfile(p)
+      setLists({ repos, favs, history })
+    } catch {
+      setLoadError(true) // 规范 §8.2：轻量错误条 + 重试，不卡死「加载中」
+    }
   }, [login])
 
   useEffect(() => { void loadAll() }, [loadAll])
@@ -58,8 +65,13 @@ export default function ProfilePage() {
     void loadAll()
   }
 
-  if (!profile) {
+  if (!profile && !loadError) {
     return (<><TopBar /><main className="page-shell"><p className="profile-loading">加载中…</p></main></>)
+  }
+
+  if (!profile) {
+    // 初次加载失败：profile 尚为 null，不能落入主渲染（profile.login 会崩），独立错误分支兜底
+    return (<><TopBar /><main className="page-shell"><ErrorBanner message="主页加载失败" onRetry={() => void loadAll()} /></main></>)
   }
 
   const current = lists[tab as 'repos' | 'favs' | 'history'] ?? []
@@ -71,6 +83,7 @@ export default function ProfilePage() {
       <TopBar />
       <div className="profile-banner" aria-hidden="true" />
       <main className="page-shell profile-page">
+        {loadError && <ErrorBanner message="主页加载失败" onRetry={() => void loadAll()} />}
         <header className="profile-head">
           <div className="profile-avatar" aria-label="头像">
             {profile.login.slice(0, 1).toUpperCase()}

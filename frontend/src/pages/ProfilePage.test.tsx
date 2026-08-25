@@ -62,6 +62,15 @@ describe('ProfilePage', () => {
     expect((await screen.findAllByText('tinyfetch')).length).toBeGreaterThanOrEqual(2)
   })
 
+  it('加载失败显示错误条与重试（规范 §8.2）', async () => {
+    const { api } = await import('../api/client')
+    const spy = vi.spyOn(api, 'userProfile').mockRejectedValue(new Error('boom'))
+    renderAt('/user/alice')
+    expect(await screen.findByText('主页加载失败')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '重试' })).toBeInTheDocument()
+    spy.mockRestore()
+  })
+
   it('本人仓库可下架', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true)
     useAuthStore.setState({ user: FIXTURE_USER })
