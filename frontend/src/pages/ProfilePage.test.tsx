@@ -1,0 +1,74 @@
+// src/pages/ProfilePage.test.tsx
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { FIXTURE_USER } from '../api/fixtures'
+import { useAuthStore } from '../store/authStore'
+import ProfilePage from './ProfilePage'
+
+function renderAt(url: string) {
+  return render(
+    <MemoryRouter initialEntries={[url]}>
+      <Routes>
+        <Route path="/user/:login" element={<ProfilePage />} />
+      </Routes>
+    </MemoryRouter>
+  )
+}
+
+describe('ProfilePage', () => {
+  beforeEach(() => {
+    useAuthStore.setState({ user: null })
+    vi.restoreAllMocks()
+  })
+
+  it('横幅、骑线头像、签名与数据行', async () => {
+    renderAt('/user/alice')
+    // login 在主页标题与本人仓库卡作者名双渲染（同 Task 8 findAllByText 约定）
+    expect((await screen.findAllByText('alice')).length).toBeGreaterThanOrEqual(2)
+    expect(screen.getByText('在写小而可读的系统软件。')).toBeInTheDocument()
+    expect(screen.getByText('获赞星')).toBeInTheDocument()
+    expect(screen.getByLabelText('头像')).toBeInTheDocument()
+  })
+
+  it('本人视图可就地编辑签名', async () => {
+    useAuthStore.setState({ user: FIXTURE_USER })
+    renderAt('/user/alice')
+    await screen.findAllByText('alice')
+    await userEvent.click(screen.getByLabelText('编辑签名'))
+    const input = screen.getByDisplayValue('在写小而可读的系统软件。')
+    await userEvent.clear(input)
+    await userEvent.type(input, '新的签名')
+    await userEvent.tab() // 失焦保存
+    expect(await screen.findByText('新的签名')).toBeInTheDocument()
+  })
+
+  it('他人视图无编辑入口', async () => {
+    useAuthStore.setState({ user: FIXTURE_USER })
+    renderAt('/user/bob')
+    await screen.findAllByText('bob')
+    expect(screen.queryByLabelText('编辑签名')).not.toBeInTheDocument()
+  })
+
+  it('tab 切换到收藏夹显示收藏内容', async () => {
+    renderAt('/user/alice?tab=favs')
+    // 仓库名在封面 SVG 与标题双渲染（同 Task 8 约定）
+    expect((await screen.findAllByText('rust-kv')).length).toBeGreaterThanOrEqual(2) // fixture 收藏为 id 3
+  })
+
+  it('浏览历史 tab 由 URL 参数驱动', async () => {
+    renderAt('/user/alice?tab=history')
+    expect((await screen.findAllByText('tinyfetch')).length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('本人仓库可下架', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    useAuthStore.setState({ user: FIXTURE_USER })
+    renderAt('/user/alice')
+    // 仓库名在封面 SVG 与标题双渲染（同 Task 8 约定）
+    await screen.findAllByText('mini-agent')
+    await userEvent.click(screen.getByRole('button', { name: '下架' }))
+    expect(await screen.findByText('你还没有推广过仓库')).toBeInTheDocument()
+  })
+})

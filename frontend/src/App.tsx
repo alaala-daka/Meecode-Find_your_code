@@ -1,6 +1,7 @@
 // src/App.tsx
 import { Routes, Route, Navigate } from 'react-router-dom'
 import HomePage from './pages/HomePage'
+import ProfilePage from './pages/ProfilePage'
 import RepoPage from './pages/RepoPage'
 import SearchPage from './pages/SearchPage'
 import SubmitPage from './pages/SubmitPage'
@@ -13,6 +14,7 @@ export default function App() {
       <Route path="/search" element={<SearchPage />} />
       <Route path="/repo/:id" element={<RepoPage />} />
       <Route path="/submit" element={<SubmitPage />} />
+      <Route path="/user/:login" element={<ProfilePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
