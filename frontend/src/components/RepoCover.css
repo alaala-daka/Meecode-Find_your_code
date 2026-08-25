@@ -1,0 +1,8 @@
+/* src/components/RepoCover.css */
+.repo-cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+}
