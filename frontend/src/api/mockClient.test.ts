@@ -1,0 +1,48 @@
+// src/api/mockClient.test.ts
+import { describe, expect, it } from 'vitest'
+import { createMockClient } from './mockClient'
+
+describe('mockClient', () => {
+  it('feed 首页 8 条且可翻页', async () => {
+    const api = createMockClient()
+    const p1 = await api.feed(null, 1)
+    const p2 = await api.feed(null, 2)
+    expect(p1.cards).toHaveLength(8)
+    expect(p1.has_more).toBe(true)
+    expect(p2.cards).toHaveLength(4)
+    expect(p2.has_more).toBe(false)
+  })
+  it('feed 按分类过滤', async () => {
+    const api = createMockClient()
+    const page = await api.feed('AI 与机器学习', 1)
+    expect(page.cards.length).toBeGreaterThan(0)
+    expect(page.cards.every((c) => c.category === 'AI 与机器学习')).toBe(true)
+  })
+  it('search 命中 tagline 与 star 排序', async () => {
+    const api = createMockClient()
+    const hit = await api.search('Agent', 'default', 1)
+    expect(hit.total).toBeGreaterThan(0)
+    const byStars = await api.search('a', 'stars', 1)
+    const stars = byStars.cards.map((c) => c.stars)
+    expect(stars).toEqual([...stars].sort((x, y) => y - x))
+  })
+  it('投稿后出现在 myRepos 顶部', async () => {
+    const api = createMockClient()
+    const before = (await api.myRepos()).length
+    await api.submitRepo({ full_name: 'alice/new-repo', tagline_zh: '新仓库', intro_zh: '', category: '开发工具', cover_url: null })
+    const after = await api.myRepos()
+    expect(after.length).toBe(before + 1)
+    expect(after[0].full_name).toBe('alice/new-repo')
+  })
+  it('interact 点赞切换计数', async () => {
+    const api = createMockClient()
+    const before = (await api.repo(2)).likes
+    await api.interact(2, 'like', true)
+    expect((await api.repo(2)).likes).toBe(before + 1)
+  })
+  it('delist 后仓库消失', async () => {
+    const api = createMockClient()
+    await api.delist(1)
+    await expect(api.repo(1)).rejects.toThrow('仓库不存在')
+  })
+})
