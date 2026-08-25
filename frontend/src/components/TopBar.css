@@ -1,0 +1,91 @@
+/* src/components/TopBar.css —— 规范 §6.2：高 64px，搜索 40px 圆角 10px */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: 64px;
+  background: var(--bg1);
+  border-bottom: 1px solid var(--line_light);
+}
+.topbar-inner {
+  width: 1020px;
+  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+@media (min-width: 1560px) { .topbar-inner { width: 1180px; } }
+
+.topbar-left { display: flex; align-items: center; gap: 20px; }
+.logo { display: flex; align-items: center; gap: 8px; color: var(--brand_blue); }
+.logo-text { font-size: 18px; font-weight: 500; color: var(--text1); }
+.topbar-nav { display: flex; gap: 4px; }
+.nav-item {
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text2);
+  transition: background-color var(--time-fast), color var(--time-fast);
+}
+.nav-item:hover { background: var(--brand_blue_thin); }
+.nav-item.is-current { color: var(--brand_blue); font-weight: 500; }
+
+.topbar-search {
+  flex: 1;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  height: 40px;
+  border: 1px solid var(--line_regular);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg2);
+  transition: background-color var(--time-fast), box-shadow var(--time-fast);
+}
+.topbar-search:focus-within {
+  background: var(--bg1);
+  box-shadow: var(--focus_ring);
+}
+.search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0 14px;
+  font-size: 14px;
+  color: var(--text1);
+  outline: none;
+}
+.search-input::placeholder { color: var(--text4); }
+.search-btn {
+  width: 52px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text3);
+  transition: color var(--time-fast), background-color var(--time-fast);
+}
+.search-btn:hover { color: var(--brand_blue); background: var(--brand_blue_thin); }
+
+.topbar-right { display: flex; align-items: center; gap: 14px; }
+.icon-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--bg2);
+  transition: background-color var(--time-fast);
+}
+.icon-btn:hover { background: var(--brand_blue_thin); }
+.btn-submit { white-space: nowrap; }
+.login-entry {
+  color: var(--brand_blue);
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--time-fast);
+}
+.login-entry:hover { background: var(--brand_blue_thin); }
+.avatar-sm {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--brand_blue);
+  color: var(--bg1);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 500;
+}
