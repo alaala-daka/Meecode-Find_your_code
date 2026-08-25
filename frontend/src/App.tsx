@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import RepoPage from './pages/RepoPage'
 import SearchPage from './pages/SearchPage'
+import SubmitPage from './pages/SubmitPage'
 import './App.css'
 
 export default function App() {
@@ -11,6 +12,7 @@ export default function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/search" element={<SearchPage />} />
       <Route path="/repo/:id" element={<RepoPage />} />
+      <Route path="/submit" element={<SubmitPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
