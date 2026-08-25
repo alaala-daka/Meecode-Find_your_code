@@ -1,0 +1,46 @@
+/* src/pages/RepoPage.css —— 规范 §7.3 */
+.repo-loading { color: var(--text3); padding: 60px 0; text-align: center; }
+.repo-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+  margin-bottom: 20px;
+  background: var(--bg1);
+  border-radius: var(--radius-xl);
+}
+.repo-name { font-size: 20px; font-weight: 500; }
+.repo-tagline { margin-top: 6px; font-size: 15px; color: var(--text2); }
+.repo-meta { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: var(--text3); font-size: 13px; }
+.repo-stars { color: var(--brand_amber); }
+.repo-lang { display: inline-flex; align-items: center; gap: 5px; }
+.repo-head .source-badge { position: static; }
+.repo-head-actions { display: flex; gap: 10px; align-items: flex-start; flex-shrink: 0; }
+/* 激活态：收藏=琥珀，点赞=品牌蓝（规范 §6.6） */
+.repo-head-actions .btn-fav.is-on { color: var(--brand_amber); border-color: var(--brand_amber); background: var(--brand_amber_thin); }
+.repo-head-actions .btn-like.is-on { color: var(--brand_blue); border-color: var(--brand_blue); background: var(--brand_blue_thin); }
+
+.repo-tab-body { margin-top: 16px; animation: fade-in 0.15s var(--ease); }
+.repo-files {
+  display: flex;
+  min-height: 420px;
+  background: var(--bg1);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.file-fallback { padding: 40px; color: var(--text3); font-size: 13px; }
+.file-fallback a { color: var(--brand_blue); }
+
+.explain-placeholder {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 80px 0;
+  background: var(--bg1);
+  border-radius: var(--radius-lg);
+}
+.explain-title { font-size: 16px; font-weight: 500; color: var(--text2); }
+.explain-sub { font-size: 13px; color: var(--text3); }
+
+.repo-discussions { margin-top: 24px; padding: 20px 24px; background: var(--bg1); border-radius: var(--radius-lg); }
+.discussions-title { font-size: 16px; font-weight: 500; margin-bottom: 12px; }
+.discussions-body { color: var(--text3); font-size: 13px; }
+.discussions-closed { color: var(--text3); font-size: 13px; }
