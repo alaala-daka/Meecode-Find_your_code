@@ -77,10 +77,16 @@
   display: flex; flex-direction: column; gap: 8px;
 }
 .preview-label { font-size: 12px; color: var(--text3); }
-.preview-title { font-family: var(--font-mono); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.preview-title { font-family: var(--font-mono); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; overflow-wrap: anywhere; text-wrap: balance; }
 .preview-tagline { font-size: 13px; color: var(--text2); }
 
 .submit-done { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 60px 0; }
 .done-img { width: 160px; height: 160px; object-fit: contain; }
-.done-title { font-size: 18px; font-weight: 500; }
+.done-title { font-size: 18px; font-weight: 500; text-wrap: balance; }
 .done-sub { font-size: 13px; color: var(--text3); }
+
+/* 窄屏：编辑表单与预览改纵向堆叠 */
+@media (max-width: 860px) {
+  .submit-edit { flex-direction: column; }
+  .edit-preview { flex: none; width: 100%; }
+}

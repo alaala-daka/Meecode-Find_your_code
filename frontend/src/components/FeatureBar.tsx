@@ -12,7 +12,7 @@ export default function FeatureBar({ data }: { data: RepoCardData }) {
   return (
     <section className="feature-bar" aria-label="今日精选">
       <Link className="feature-cover" to={`/repo/${data.id}`} aria-label={data.title} tabIndex={-1}>
-        <RepoCover name={data.title} language={data.language} topics={data.topics} coverUrl={data.cover_url} />
+        <RepoCover name={data.title} language={data.language} topics={data.topics} coverUrl={data.cover_url} loading="eager" />
       </Link>
       <div className="feature-info">
         <p className="feature-eyebrow">

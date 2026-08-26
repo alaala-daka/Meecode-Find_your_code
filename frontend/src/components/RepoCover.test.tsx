@@ -29,4 +29,19 @@ describe('RepoCover', () => {
     const { container } = render(<RepoCover name="x" language="Go" topics={[]} coverUrl="https://example.com/c.png" />)
     expect(container.querySelector('img')).toHaveAttribute('src', 'https://example.com/c.png')
   })
+  it('封面 img 带尺寸与懒加载', () => {
+    const { container } = render(<RepoCover name="x" language={null} topics={[]} coverUrl="https://example.com/c.png" />)
+    const img = container.querySelector('img') as HTMLImageElement
+    expect(img).toHaveAttribute('width', '672')
+    expect(img).toHaveAttribute('height', '378')
+    expect(img).toHaveAttribute('loading', 'lazy')
+  })
+  it('封面 img 可指定急切加载（首屏头条）', () => {
+    const { container } = render(<RepoCover name="x" language={null} topics={[]} coverUrl="https://example.com/c.png" loading="eager" />)
+    expect(container.querySelector('img')).toHaveAttribute('loading', 'eager')
+  })
+  it('长 topic 封面胶囊字号降档防溢出', () => {
+    const { container } = render(<RepoCover name="x" language={null} topics={['machine-learning']} />)
+    expect(container.querySelector('text[font-size="17"]')).toBeTruthy()
+  })
 })

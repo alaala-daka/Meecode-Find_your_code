@@ -95,6 +95,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.repo-card-meta { font-size: 13px; color: var(--text3); }
+.repo-card-meta { font-size: 13px; color: var(--text3); font-variant-numeric: tabular-nums; }
 .meta-author { transition: color var(--time-fast); }
 .meta-author:hover { color: var(--brand_blue); }

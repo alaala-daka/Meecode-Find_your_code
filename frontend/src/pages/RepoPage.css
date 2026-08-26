@@ -2,6 +2,7 @@
 .repo-loading { color: var(--text3); padding: 60px 0; text-align: center; }
 .repo-head {
   display: flex;
+  flex-wrap: wrap; /* 窄屏标题与按钮组换行，防横向溢出 */
   justify-content: space-between;
   gap: 24px;
   padding: 24px;
@@ -15,9 +16,10 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 .repo-tagline { margin-top: 6px; font-size: 15px; color: var(--text2); }
-.repo-meta { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: var(--text3); font-size: 13px; flex-wrap: wrap; }
+.repo-meta { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: var(--text3); font-size: 13px; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
 .repo-stars { font-family: var(--font-mono); font-weight: 600; color: var(--brand_amber); }
 .repo-lang { display: inline-flex; align-items: center; gap: 5px; }
 .repo-topics { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
@@ -48,6 +50,18 @@
 .explain-img { width: 240px; height: 160px; object-fit: contain; margin-bottom: 8px; }
 .explain-title { font-size: 16px; font-weight: 500; color: var(--text2); }
 .explain-sub { font-size: 13px; color: var(--text3); }
+
+/* 窄屏：文件树改上树下码，操作按钮换行 */
+@media (max-width: 760px) {
+  .repo-files { flex-direction: column; }
+  .file-tree {
+    flex: none; width: 100%;
+    max-height: 240px;
+    border-right: none;
+    border-bottom: 1px solid var(--line_light);
+  }
+  .repo-head-actions { flex-wrap: wrap; }
+}
 
 .repo-discussions { margin-top: 24px; padding: 20px 24px; background: var(--bg1); border-radius: var(--radius-lg); }
 .discussions-title { font-size: 16px; font-weight: 500; margin-bottom: 12px; }

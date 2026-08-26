@@ -47,6 +47,12 @@ code, pre {
   font-family: ui-monospace, Consolas, "Courier New", monospace;
 }
 
+/* 触摸与点按反馈（可达性补充）：消除移动端双击缩放延迟与灰色高亮 */
+button, a, [role="button"], input, textarea, select {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* 全站共用的淡入关键帧（规范 §4.5 大面积淡入 .3s） */
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 

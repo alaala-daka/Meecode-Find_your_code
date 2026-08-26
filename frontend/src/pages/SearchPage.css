@@ -38,8 +38,14 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.search-meta { display: flex; align-items: center; gap: 10px; color: var(--text3); font-size: 13px; }
+.search-meta { display: flex; align-items: center; gap: 10px; color: var(--text3); font-size: 13px; font-variant-numeric: tabular-nums; }
 .search-stars { color: var(--brand_amber); }
 .search-lang { display: inline-flex; align-items: center; gap: 5px; }
 .lang-dot { width: 8px; height: 8px; border-radius: 50%; }
 .search-info .capsule { align-self: flex-start; }
+
+/* 窄屏：富卡片改纵向堆叠 */
+@media (max-width: 640px) {
+  .search-card { flex-direction: column; }
+  .search-cover { flex: none; width: 100%; }
+}

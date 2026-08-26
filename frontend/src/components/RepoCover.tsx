@@ -10,6 +10,14 @@ interface Props {
   topics: string[]
   coverUrl?: string | null
   className?: string
+  /** 图片来源加载策略：网格折下内容默认 lazy，首屏头条传 eager */
+  loading?: 'lazy' | 'eager'
+}
+
+// 封面内 topic 胶囊字号：按估算宽度降档（胶囊定宽 138，防文字溢出画布）
+function capsuleFontSize(t: string): number {
+  const est = [...t].reduce((acc, ch) => acc + (ch.charCodeAt(0) > 255 ? 22 : 12), 0)
+  return est > 132 ? 17 : 22
 }
 
 // 长名拆两行：≤14 单行；否则取前 12 字符（已以 '-' 结尾则不重复追加）与剩余部分
@@ -37,9 +45,10 @@ function codeBars(name: string): Bar[] {
   return bars
 }
 
-export default function RepoCover({ name, language, topics, coverUrl, className }: Props) {
+export default function RepoCover({ name, language, topics, coverUrl, className, loading }: Props) {
   if (coverUrl) {
-    return <img className={`repo-cover repo-cover-img ${className ?? ''}`} src={coverUrl} alt={name} />
+    return <img className={`repo-cover repo-cover-img ${className ?? ''}`} src={coverUrl} alt={name}
+      width={672} height={378} loading={loading ?? 'lazy'} />
   }
   const base = coverBase(language)
   const accent = languageColor(language)
@@ -68,7 +77,7 @@ export default function RepoCover({ name, language, topics, coverUrl, className 
       {shown.map((t, i) => (
         <g key={t}>
           <rect x={48 + i * 150} y="312" width="138" height="40" rx="12" fill={capsuleBg(accent)} />
-          <text x={48 + i * 150 + 69} y="338" fontSize="22" textAnchor="middle" fill={capsuleText(accent)}>{t}</text>
+          <text x={48 + i * 150 + 69} y="338" fontSize={capsuleFontSize(t)} textAnchor="middle" fill={capsuleText(accent)}>{t}</text>
         </g>
       ))}
     </svg>

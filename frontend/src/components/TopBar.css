@@ -101,3 +101,9 @@
   display: flex; align-items: center; justify-content: center;
   font-weight: 500;
 }
+
+/* 窄屏：收起字标与导航，压缩主按钮，保搜索框空间 */
+@media (max-width: 760px) {
+  .logo-sub, .topbar-nav { display: none; }
+  .btn-submit { padding: 0 12px; font-size: 13px; }
+}
