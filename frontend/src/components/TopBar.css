@@ -67,11 +67,13 @@
 .topbar-right { display: flex; align-items: center; gap: 14px; }
 .icon-btn {
   width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
   border-radius: 50%;
   background: var(--bg2);
   transition: background-color var(--time-fast);
 }
 .icon-btn:hover { background: var(--brand_blue_thin); }
+.icon-img { width: 20px; height: 20px; }
 .btn-submit { white-space: nowrap; }
 .login-entry {
   color: var(--brand_blue);

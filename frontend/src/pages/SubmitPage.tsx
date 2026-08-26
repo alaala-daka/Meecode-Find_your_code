@@ -11,6 +11,7 @@ import { useAuthStore } from '../store/authStore'
 // 显式导入所复用样式的定义文件（.cat-pill/.source-badge），避免依赖打包顺序、兼容未来路由级代码分割
 import '../components/CategoryBar.css'
 import '../components/RepoCard.css'
+import submitSuccess from '../assets/submit-success.png'
 import './SubmitPage.css'
 
 const STEPS = ['选仓库', '编辑推广页', '发布']
@@ -146,7 +147,7 @@ export default function SubmitPage() {
 
         {step === 2 && (
           <section className="submit-done">
-            <p className="done-emoji" aria-hidden="true">🎉</p>
+            <img className="done-img" src={submitSuccess} alt="" aria-hidden="true" />
             <p className="done-title">已发布，进入首发曝光窗口</p>
             <p className="done-sub">72 小时内你的仓库会获得加权与保底曝光</p>
             <Button onClick={() => navigate(`/user/${user.login}`)}>查看我的主页</Button>

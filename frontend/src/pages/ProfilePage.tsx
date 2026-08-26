@@ -9,6 +9,8 @@ import RepoCard from '../components/RepoCard'
 import Tabs from '../components/Tabs'
 import TopBar from '../components/TopBar'
 import { useAuthStore } from '../store/authStore'
+import emptyFavorites from '../assets/empty-favorites.png'
+import emptyRepos from '../assets/empty-repos.png'
 import './ProfilePage.css'
 
 const TAB_ITEMS = [
@@ -121,7 +123,8 @@ export default function ProfilePage() {
           {current.length === 0 ? (
             <EmptyState title={emptyText}
               actionLabel={tab === 'repos' ? '推广我的仓库' : '去首页逛逛'}
-              onAction={() => navigate(tab === 'repos' ? '/submit' : '/')} />
+              onAction={() => navigate(tab === 'repos' ? '/submit' : '/')}
+              image={tab === 'repos' ? emptyRepos : tab === 'favs' ? emptyFavorites : undefined} />
           ) : (
             <div className="repo-grid">
               {current.map((c) => (

@@ -69,6 +69,6 @@
 .preview-tagline { font-size: 13px; color: var(--text2); }
 
 .submit-done { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 60px 0; }
-.done-emoji { font-size: 40px; }
+.done-img { width: 160px; height: 160px; object-fit: contain; }
 .done-title { font-size: 18px; font-weight: 500; }
 .done-sub { font-size: 13px; color: var(--text3); }

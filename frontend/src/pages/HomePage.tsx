@@ -8,6 +8,7 @@ import RepoCard from '../components/RepoCard'
 import { SkeletonGrid } from '../components/Skeleton'
 import TopBar from '../components/TopBar'
 import { useFeedStore } from '../store/feedStore'
+import emptyCategory from '../assets/empty-category.png'
 import './HomePage.css'
 
 export default function HomePage() {
@@ -49,7 +50,7 @@ export default function HomePage() {
         )}
         {cards.length === 0 && loading && <SkeletonGrid count={8} />}
         {showEmpty && (
-          <EmptyState title="这个分类还没有仓库" actionLabel="推广我的仓库" onAction={() => navigate('/submit')} />
+          <EmptyState title="这个分类还没有仓库" actionLabel="推广我的仓库" onAction={() => navigate('/submit')} image={emptyCategory} />
         )}
         {cards.length > 0 && (
           <>

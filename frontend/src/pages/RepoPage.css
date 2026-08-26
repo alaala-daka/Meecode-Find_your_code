@@ -37,6 +37,7 @@
   background: var(--bg1);
   border-radius: var(--radius-lg);
 }
+.explain-img { width: 240px; height: 160px; object-fit: contain; margin-bottom: 8px; }
 .explain-title { font-size: 16px; font-weight: 500; color: var(--text2); }
 .explain-sub { font-size: 13px; color: var(--text3); }
 

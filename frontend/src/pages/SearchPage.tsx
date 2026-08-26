@@ -11,6 +11,7 @@ import Tabs from '../components/Tabs'
 import TopBar from '../components/TopBar'
 import { languageColor } from '../theme/languageColors'
 import { formatCount, formatTime } from '../utils/format'
+import emptySearch from '../assets/empty-search.png'
 import './SearchPage.css'
 
 const PAGE_SIZE = 8
@@ -63,7 +64,7 @@ export default function SearchPage() {
           onChange={(k) => { setSort(k as SortKey); setPage(1) }} />
         {loading && <p className="search-loading">搜索中…</p>}
         {!loading && total === 0 && (
-          <EmptyState title="没有找到相关仓库，换个关键词试试" actionLabel="推广我的仓库" onAction={() => navigate('/submit')} />
+          <EmptyState title="没有找到相关仓库，换个关键词试试" actionLabel="推广我的仓库" onAction={() => navigate('/submit')} image={emptySearch} />
         )}
         {!loading && cards.length > 0 && (
           <ul className="search-list">

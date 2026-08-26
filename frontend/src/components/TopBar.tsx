@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import LoginModal from './LoginModal'
+import historyIcon from '../assets/history-icon.png'
 import './TopBar.css'
 
 export default function TopBar() {
@@ -61,7 +62,9 @@ export default function TopBar() {
           </button>
         </div>
         <div className="topbar-right">
-          <button className="icon-btn" aria-label="浏览历史" onClick={goHistory} />
+          <button className="icon-btn" aria-label="浏览历史" onClick={goHistory}>
+            <img className="icon-img" src={historyIcon} alt="" aria-hidden="true" />
+          </button>
           <button className="btn btn-primary btn-submit" onClick={goSubmit}>+ 推广我的仓库</button>
           {user ? (
             <Link className="avatar-sm" to={`/user/${user.login}`} aria-label="个人主页">

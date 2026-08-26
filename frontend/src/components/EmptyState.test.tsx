@@ -16,4 +16,9 @@ describe('EmptyState', () => {
     render(<EmptyState title="还没有浏览记录" />)
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
+  it('提供插画时渲染图片而非占位线条', () => {
+    const { container } = render(<EmptyState title="空" image="/x.png" />)
+    expect(container.querySelector('.empty-illustration')).toHaveAttribute('src', '/x.png')
+    expect(container.querySelector('.empty-icon')).not.toBeInTheDocument()
+  })
 })

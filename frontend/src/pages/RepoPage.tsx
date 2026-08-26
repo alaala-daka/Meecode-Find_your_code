@@ -15,6 +15,7 @@ import { languageColor } from '../theme/languageColors'
 import { formatCount, formatTime } from '../utils/format'
 // 显式导入所复用样式（.source-badge）的定义文件，避免依赖打包顺序
 import '../components/RepoCard.css'
+import explainPlaceholder from '../assets/explain-placeholder.png'
 import './RepoPage.css'
 
 const TAB_ITEMS = [
@@ -152,6 +153,7 @@ export default function RepoPage() {
           )}
           {tab === 'explain' && (
             <div className="explain-placeholder">
+              <img className="explain-img" src={explainPlaceholder} alt="" aria-hidden="true" />
               <p className="explain-title">解读功能建设中</p>
               <p className="explain-sub">AI 将把这个仓库讲给中文开发者听（第 2 块规划）</p>
             </div>
