@@ -2,7 +2,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useSearchParams } from 'react-router-dom'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { FIXTURE_USER } from '../api/fixtures'
 import { useAuthStore } from '../store/authStore'
 import RepoPage from './RepoPage'
