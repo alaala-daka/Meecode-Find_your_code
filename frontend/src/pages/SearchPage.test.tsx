@@ -1,15 +1,20 @@
 // src/pages/SearchPage.test.tsx
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useNavigate, useSearchParams } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import SearchPage from './SearchPage'
+
+function ParamProbe() {
+  const [p] = useSearchParams()
+  return <output data-testid="params">{p.toString()}</output>
+}
 
 function renderAt(url: string) {
   return render(
     <MemoryRouter initialEntries={[url]}>
       <Routes>
-        <Route path="/search" element={<SearchPage />} />
+        <Route path="/search" element={<><SearchPage /><ParamProbe /></>} />
       </Routes>
     </MemoryRouter>
   )
@@ -24,7 +29,7 @@ function renderAtWithNav(url: string) {
   return render(
     <MemoryRouter initialEntries={[url]}>
       <Routes>
-        <Route path="/search" element={<SearchPage />} />
+        <Route path="/search" element={<><SearchPage /><ParamProbe /></>} />
       </Routes>
       <NavProbe />
     </MemoryRouter>
@@ -71,5 +76,27 @@ describe('SearchPage', () => {
     renderAt('/search?q=不存在的关键词')
     expect(await screen.findByText('没有找到相关仓库，换个关键词试试')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '推广我的仓库' })).toBeInTheDocument()
+  })
+
+  it('排序与页码写入 URL', async () => {
+    renderAt('/search?q=a')
+    await screen.findByTestId('search-card-1')
+    await userEvent.click(screen.getByRole('tab', { name: '最新' }))
+    expect(await screen.findByTestId('params')).toHaveTextContent('sort=newest')
+  })
+
+  it('搜索失败显示错误条并可重试', async () => {
+    const { api } = await import('../api/client')
+    const spy = vi.spyOn(api, 'search').mockRejectedValueOnce(new Error('boom'))
+    renderAt('/search?q=agent')
+    expect(await screen.findByText('搜索失败，请重试')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '重试' })).toBeInTheDocument()
+    spy.mockRestore()
+  })
+
+  it('空关键词显示引导且不卡加载', async () => {
+    renderAt('/search?q=')
+    expect(await screen.findByText('在顶栏输入关键词开始搜索')).toBeInTheDocument()
+    expect(screen.queryByText('搜索中…')).not.toBeInTheDocument()
   })
 })
