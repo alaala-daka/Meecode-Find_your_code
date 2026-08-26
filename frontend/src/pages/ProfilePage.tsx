@@ -118,7 +118,11 @@ export default function ProfilePage() {
           </div>
         </header>
 
-        <Tabs items={TAB_ITEMS} active={tab} onChange={switchTab} />
+        <Tabs
+          items={TAB_ITEMS.map((t) => ({ ...t, count: lists[t.key as 'repos' | 'favs' | 'history'].length }))}
+          active={tab}
+          onChange={switchTab}
+        />
 
         <div className="profile-tab-body" key={tab}>
           {current.length === 0 ? (

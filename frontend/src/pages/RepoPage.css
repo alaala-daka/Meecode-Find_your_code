@@ -9,11 +9,18 @@
   background: var(--bg1);
   border-radius: var(--radius-xl);
 }
-.repo-name { font-size: 20px; font-weight: 500; }
+.repo-name {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
 .repo-tagline { margin-top: 6px; font-size: 15px; color: var(--text2); }
-.repo-meta { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: var(--text3); font-size: 13px; }
-.repo-stars { color: var(--brand_amber); }
+.repo-meta { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: var(--text3); font-size: 13px; flex-wrap: wrap; }
+.repo-stars { font-family: var(--font-mono); font-weight: 600; color: var(--brand_amber); }
 .repo-lang { display: inline-flex; align-items: center; gap: 5px; }
+.repo-topics { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .repo-head .source-badge { position: static; }
 .repo-head-actions { display: flex; gap: 10px; align-items: flex-start; flex-shrink: 0; }
 /* 激活态：收藏=琥珀，点赞=品牌蓝（规范 §6.6） */

@@ -43,6 +43,17 @@
   --time-fast: 0.2s;
   --time-slow: 0.3s;
   --ease: cubic-bezier(0, 0, 0.2, 1);
+  /* 字型（身份层：仓库名即代码，一律等宽；中文正文维持系统无衬线） */
+  --font-body: -apple-system, BlinkMacSystemFont, Helvetica Neue, Helvetica,
+    Arial, PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "JetBrains Mono", Consolas,
+    Menlo, "Liberation Mono", "Courier New", monospace;
+  /* 个人页横幅细纹理（规范 §7.5 实时生成、零图片） */
+  --dot_texture: rgba(255, 254, 251, 0.16);
+  /* 布局（§5 增补）：流式内容区，压缩左右留空，常规桌面即五列 */
+  --shell-max: 1600px;
+  --shell-pad: 24px;
+  --grid-gap: 20px;
   /* 遮罩与半透明（规范 §3.7、§6.2、§8.3）——裸色值集中在本文件 */
   --mask_cover: rgba(43, 32, 16, 0.55);
   --mask_modal: rgba(43, 32, 16, 0.4);

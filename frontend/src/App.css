@@ -1,9 +1,7 @@
-/* src/App.css —— 页面壳：内容区宽度纪律（规范 §5） */
+/* src/App.css —— 页面壳：流式内容区（规范 §5），压缩左右留空 */
 .page-shell {
-  width: 1020px;
+  width: 100%;
+  max-width: var(--shell-max);
   margin: 0 auto;
-  padding: 20px 0 60px;
-}
-@media (min-width: 1560px) {
-  .page-shell { width: 1180px; }
+  padding: 20px var(--shell-pad) 60px;
 }

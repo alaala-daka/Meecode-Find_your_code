@@ -8,18 +8,28 @@
   border-bottom: 1px solid var(--line_light);
 }
 .topbar-inner {
-  width: 1020px;
+  width: 100%;
+  max-width: var(--shell-max);
   margin: 0 auto;
+  padding: 0 var(--shell-pad);
   height: 100%;
   display: flex;
   align-items: center;
   gap: 24px;
 }
-@media (min-width: 1560px) { .topbar-inner { width: 1180px; } }
 
 .topbar-left { display: flex; align-items: center; gap: 20px; }
 .logo { display: flex; align-items: center; gap: 8px; color: var(--brand_blue); }
-.logo-text { font-size: 18px; font-weight: 500; color: var(--text1); }
+.logo-text { font-size: 18px; font-weight: 500; color: var(--text1); display: inline-flex; align-items: baseline; }
+.logo-sub {
+  margin-left: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+  text-transform: lowercase;
+}
 .topbar-nav { display: flex; gap: 4px; }
 .nav-item {
   padding: 6px 12px;

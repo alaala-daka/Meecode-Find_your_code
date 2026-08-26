@@ -1,5 +1,7 @@
-// src/components/RepoCover.tsx —— 规范 §6.4 封面：语言取色 + 仓库名 + ≤3 topics
-import { capsuleBg, capsuleText, coverBase, languageColor, TEXT_ON_COVER } from '../theme/languageColors'
+// src/components/RepoCover.tsx —— 封面即「一页代码」：文件名 + 行号栏 + 语言色代码指纹条
+import {
+  capsuleBg, capsuleText, coverBase, GUTTER_ON_COVER, languageColor, TEXT_ON_COVER,
+} from '../theme/languageColors'
 import './RepoCover.css'
 
 interface Props {
@@ -17,6 +19,24 @@ function splitName(name: string): [string, string?] {
   return [head.endsWith('-') ? head : head + '-', name.slice(12)]
 }
 
+const BAR_COUNT = 5
+const BAR_Y0 = 150
+const BAR_STEP = 28
+const BAR_OPACITY = [0.9, 0.5, 0.75, 0.45, 0.65]
+
+// 代码指纹：条宽与缩进由仓库名哈希推导——同仓库同图，不同仓库彼此不同
+interface Bar { y: number; x: number; w: number; opacity: number }
+function codeBars(name: string): Bar[] {
+  const bars: Bar[] = []
+  for (let i = 0; i < BAR_COUNT; i += 1) {
+    const c = name.charCodeAt(i % name.length) || 97
+    const w = 140 + ((c * 31 + i * 97) % 380)
+    const indent = (c + i * 7) % 3 === 0 ? 36 : 0
+    bars.push({ y: BAR_Y0 + i * BAR_STEP, x: 72 + indent, w, opacity: BAR_OPACITY[i] })
+  }
+  return bars
+}
+
 export default function RepoCover({ name, language, topics, coverUrl, className }: Props) {
   if (coverUrl) {
     return <img className={`repo-cover repo-cover-img ${className ?? ''}`} src={coverUrl} alt={name} />
@@ -25,17 +45,30 @@ export default function RepoCover({ name, language, topics, coverUrl, className 
   const accent = languageColor(language)
   const [line1, line2] = splitName(name)
   const shown = topics.slice(0, 3)
+  const bars = codeBars(name)
+  const mono = { fontFamily: 'var(--font-mono)' }
   return (
     <svg className={`repo-cover ${className ?? ''}`} viewBox="0 0 672 378" role="img" aria-label={name}>
       <rect width="672" height="378" fill={base} />
-      <circle className="cover-shape" cx="560" cy="80" r="140" fill={accent} opacity="0.55" />
-      <circle cx="90" cy="330" r="60" fill={accent} opacity="0.3" />
-      <text x="48" y="160" fontSize="40" fontWeight="500" fill={TEXT_ON_COVER}>{line1}</text>
-      {line2 && <text x="48" y="212" fontSize="40" fontWeight="500" fill={TEXT_ON_COVER}>{line2}</text>}
+      <text x="48" y={line2 ? 76 : 96} fontSize={line2 ? 38 : 42} fontWeight="600"
+        fill={TEXT_ON_COVER} style={mono}>{line1}</text>
+      {line2 && (
+        <text x="48" y="120" fontSize="38" fontWeight="600" fill={TEXT_ON_COVER} style={mono}>{line2}</text>
+      )}
+      <line x1="64" y1="140" x2="64" y2="288" stroke={GUTTER_ON_COVER} strokeWidth="1" opacity="0.6" />
+      {bars.map((b, i) => (
+        <g key={i}>
+          <text x="52" y={b.y + 13} fontSize="16" textAnchor="end" fill={GUTTER_ON_COVER} style={mono}>
+            {i + 1}
+          </text>
+          <rect className={i === 0 ? 'cover-shape' : undefined} x={b.x} y={b.y} width={b.w}
+            height="16" rx="8" fill={accent} opacity={b.opacity} />
+        </g>
+      ))}
       {shown.map((t, i) => (
         <g key={t}>
-          <rect x={48 + i * 150} y="286" width="138" height="40" rx="12" fill={capsuleBg(accent)} />
-          <text x={48 + i * 150 + 69} y="312" fontSize="22" textAnchor="middle" fill={capsuleText(accent)}>{t}</text>
+          <rect x={48 + i * 150} y="312" width="138" height="40" rx="12" fill={capsuleBg(accent)} />
+          <text x={48 + i * 150 + 69} y="338" fontSize="22" textAnchor="middle" fill={capsuleText(accent)}>{t}</text>
         </g>
       ))}
     </svg>

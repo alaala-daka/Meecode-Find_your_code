@@ -6,13 +6,23 @@
 }
 .guard-title { color: var(--text2); }
 
-.steps { display: flex; gap: 32px; justify-content: center; }
+.steps { display: flex; justify-content: center; }
 .step { display: flex; align-items: center; gap: 8px; color: var(--text3); font-size: 13px; }
+/* 步骤连线：走过的那一段染琥珀 */
+.step + .step::before {
+  content: '';
+  width: 48px;
+  height: 1px;
+  margin: 0 16px;
+  background: var(--line_regular);
+}
+.step.is-done + .step::before { background: var(--brand_amber); }
 .step-dot {
   width: 24px; height: 24px;
   display: flex; align-items: center; justify-content: center;
   border-radius: 50%;
   background: var(--bg2);
+  font-family: var(--font-mono);
   font-size: 12px;
 }
 .step.is-current { color: var(--brand_blue); font-weight: 500; }
@@ -32,8 +42,8 @@
 }
 .my-repo:hover { background: var(--brand_blue_thin); }
 .my-repo.is-picked { border-color: var(--brand_blue); background: var(--brand_blue_thin); }
-.my-repo-name { flex: 1; font-weight: 500; }
-.my-repo-stars { color: var(--brand_amber); font-size: 13px; }
+.my-repo-name { flex: 1; font-family: var(--font-mono); font-weight: 600; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.my-repo-stars { font-family: var(--font-mono); color: var(--brand_amber); font-size: 13px; }
 .my-repo .source-badge { position: static; }
 
 .submit-edit { display: flex; gap: 24px; align-items: flex-start; }
@@ -65,7 +75,7 @@
   display: flex; flex-direction: column; gap: 8px;
 }
 .preview-label { font-size: 12px; color: var(--text3); }
-.preview-title { font-size: 15px; font-weight: 500; }
+.preview-title { font-family: var(--font-mono); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; overflow-wrap: anywhere; }
 .preview-tagline { font-size: 13px; color: var(--text2); }
 
 .submit-done { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 60px 0; }

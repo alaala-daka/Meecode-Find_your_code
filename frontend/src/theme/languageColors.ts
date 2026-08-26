@@ -21,6 +21,9 @@ export const FALLBACK_LANGUAGE_COLOR = '#B9AE9A'
 /** 封面文字色（= --text1，SVG 属性无法引用 CSS 变量，故在此声明） */
 export const TEXT_ON_COVER = '#2F2A22'
 
+/** 封面行号/分隔线色（= --text4，同上） */
+export const GUTTER_ON_COVER = '#C9C0B0'
+
 export function languageColor(language: string | null | undefined): string {
   if (!language) return FALLBACK_LANGUAGE_COLOR
   return LANGUAGE_COLORS[language] ?? FALLBACK_LANGUAGE_COLOR

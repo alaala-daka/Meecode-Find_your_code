@@ -39,7 +39,10 @@ export default function TopBar() {
                 <circle cx="14" cy="14" r="2.5" fill="currentColor" />
               </svg>
             </span>
-            <span className="logo-text">觅码</span>
+            <span className="logo-text">
+              觅码
+              <span className="logo-sub">Meecode</span>
+            </span>
           </Link>
           <nav className="topbar-nav">
             <Link className="nav-item is-current" to="/">首页</Link>

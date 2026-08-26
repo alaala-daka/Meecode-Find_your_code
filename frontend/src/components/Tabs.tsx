@@ -2,7 +2,7 @@
 import './Tabs.css'
 
 interface Props {
-  items: { key: string; label: string }[]
+  items: { key: string; label: string; count?: number }[]
   active: string
   onChange: (key: string) => void
 }
@@ -19,6 +19,7 @@ export default function Tabs({ items, active, onChange }: Props) {
           onClick={() => onChange(item.key)}
         >
           {item.label}
+          {typeof item.count === 'number' && <span className="tab-count">{item.count}</span>}
         </button>
       ))}
     </div>

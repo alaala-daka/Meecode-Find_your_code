@@ -18,3 +18,15 @@
   border-radius: 3px;
   background: var(--brand_blue);
 }
+.tab-count {
+  margin-left: 6px;
+  padding: 0 6px;
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 16px;
+  border-radius: 999px;
+  background: var(--bg2);
+  color: var(--text3);
+}
+.tab.is-active .tab-count { background: var(--brand_blue_thin); color: var(--brand_blue); }

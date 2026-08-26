@@ -1,0 +1,40 @@
+/* src/components/SiteFooter.css —— 页脚与内容区同宽，安静收尾 */
+.site-footer {
+  border-top: 1px solid var(--line_light);
+  background: var(--bg2);
+}
+.site-footer-inner {
+  width: 100%;
+  max-width: var(--shell-max);
+  margin: 0 auto;
+  padding: 22px var(--shell-pad);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 13px;
+  color: var(--text3);
+}
+.footer-brand {
+  font-weight: 500;
+  color: var(--text2);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+}
+.footer-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--text4);
+}
+.footer-tag { flex: 1; min-width: 0; }
+.footer-cta {
+  white-space: nowrap;
+  color: var(--text2);
+  transition: color var(--time-fast);
+}
+.footer-cta:hover { color: var(--brand_blue); }
+@media (max-width: 640px) {
+  .site-footer-inner { flex-direction: column; align-items: flex-start; gap: 8px; }
+}

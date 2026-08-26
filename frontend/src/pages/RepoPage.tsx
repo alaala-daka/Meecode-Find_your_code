@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { RepoDetail, RepoFile, RepoTreeItem } from '../api/types'
 import Button from '../components/Button'
+import Capsule from '../components/Capsule'
 import CodeView from '../components/CodeView'
 import EmptyState from '../components/EmptyState'
 import FileTree from '../components/FileTree'
@@ -11,7 +12,7 @@ import LoginModal from '../components/LoginModal'
 import Tabs from '../components/Tabs'
 import TopBar from '../components/TopBar'
 import { useAuthStore } from '../store/authStore'
-import { languageColor } from '../theme/languageColors'
+import { capsuleBg, capsuleText, languageColor } from '../theme/languageColors'
 import { formatCount, formatTime } from '../utils/format'
 // 显式导入所复用样式（.source-badge）的定义文件，避免依赖打包顺序
 import '../components/RepoCard.css'
@@ -107,7 +108,7 @@ export default function RepoPage() {
     <>
       <TopBar />
       <main className="page-shell repo-page">
-        <section className="repo-head">
+        <section className="repo-head" style={{ borderTop: `3px solid ${languageColor(detail.language)}` }}>
           <div className="repo-head-main">
             <h1 className="repo-name">{detail.title}</h1>
             <p className="repo-tagline">{detail.tagline_zh}</p>
@@ -125,6 +126,15 @@ export default function RepoPage() {
                 {detail.source === 'submitted' ? '投稿' : '采集'}
               </span>
             </p>
+            {detail.topics.length > 0 && (
+              <p className="repo-topics">
+                {detail.topics.map((t) => (
+                  <Capsule key={t} label={t}
+                    bg={capsuleBg(languageColor(detail.language))}
+                    fg={capsuleText(languageColor(detail.language))} />
+                ))}
+              </p>
+            )}
           </div>
           <div className="repo-head-actions">
             <a className="btn btn-secondary" href={detail.github_url} target="_blank" rel="noreferrer">去 GitHub ↗</a>
