@@ -194,9 +194,9 @@ export default function RepoPage() {
           {actionError && <p className="action-error" role="alert">{actionError}</p>}
         </section>
 
-        <Tabs items={TAB_ITEMS} active={tab} onChange={switchTab} />
+        <Tabs items={TAB_ITEMS} active={tab} onChange={switchTab} panelId="repo-tab-panel" />
 
-        <div className="repo-tab-body" key={tab} role="tabpanel" aria-label={tab === 'files' ? '文件预览' : '仓库解读'}>
+        <div className="repo-tab-body" key={tab} id="repo-tab-panel" role="tabpanel" aria-label={tab === 'files' ? '文件预览' : '仓库解读'}>
           {tab === 'files' && (
             <div className="repo-files">
               <FileTree tree={tree} current={file?.path ?? null} onSelect={(p) => onSelectFile(p)} />

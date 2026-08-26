@@ -128,9 +128,10 @@ export default function ProfilePage() {
           items={TAB_ITEMS.map((t) => ({ ...t, count: lists[t.key as 'repos' | 'favs' | 'history'].length }))}
           active={tab}
           onChange={switchTab}
+          panelId="profile-tab-panel"
         />
 
-        <div className="profile-tab-body" key={tab}>
+        <div className="profile-tab-body" key={tab} id="profile-tab-panel" role="tabpanel" aria-label={tab === 'repos' ? '我的仓库' : tab === 'favs' ? '收藏夹' : '浏览历史'}>
           {current.length === 0 ? (
             <EmptyState title={emptyText}
               actionLabel={tab === 'repos' ? '推广我的仓库' : '去首页逛逛'}

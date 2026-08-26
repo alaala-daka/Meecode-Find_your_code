@@ -53,4 +53,18 @@ describe('CategoryBar', () => {
     // 计算值恒为空，无法区分真实样式，故以 DOM 结构断言为准
     spy.mockRestore()
   })
+
+  it('更多菜单支持 Esc 与外部点击关闭，aria-expanded 同步', async () => {
+    const { api } = await import('../api/client')
+    const spy = vi.spyOn(api, 'categories').mockResolvedValue(['一', '二', '三', '四', '五', '六', '七', '八', '九'])
+    renderBar()
+    const moreBtn = await screen.findByText('更多 ▾')
+    expect(moreBtn).toHaveAttribute('aria-expanded', 'false')
+    await userEvent.click(moreBtn)
+    expect(moreBtn).toHaveAttribute('aria-expanded', 'true')
+    await userEvent.keyboard('{Escape}')
+    expect(screen.queryByText('九')).not.toBeInTheDocument()
+    expect(moreBtn).toHaveAttribute('aria-expanded', 'false')
+    spy.mockRestore()
+  })
 })

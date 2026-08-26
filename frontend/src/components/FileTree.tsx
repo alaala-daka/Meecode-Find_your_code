@@ -31,6 +31,7 @@ function Node({ item, depth, current, onSelect }: { item: RepoTreeItem; depth: n
   return (
     <li>
       <button className={`tree-row ${current === item.path ? 'is-current' : ''}`}
+        aria-current={current === item.path ? 'true' : undefined}
         style={{ paddingLeft: 12 + depth * 14 }} onClick={() => onSelect(item.path)}>
         {item.name}
       </button>

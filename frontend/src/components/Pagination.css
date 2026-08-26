@@ -11,3 +11,4 @@
 }
 .page-item:hover { background: var(--brand_blue_thin); }
 .page-item.is-active { background: var(--brand_blue); border-color: var(--brand_blue); color: var(--bg1); }
+.page-ellipsis { align-self: center; color: var(--text3); padding: 0 2px; }

@@ -14,8 +14,25 @@ export default function CategoryBar() {
   const active = params.get('cat')
 
   useEffect(() => {
-    api.categories().then(setCats)
+    api.categories().then(setCats).catch(() => setCats([]))
   }, [])
+
+  // 「更多」下拉：Esc 或点击外部关闭
+  useEffect(() => {
+    if (!moreOpen) return
+    function onDoc(e: MouseEvent) {
+      if (!(e.target as HTMLElement).closest('.cat-more-wrap')) setMoreOpen(false)
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMoreOpen(false)
+    }
+    document.addEventListener('click', onDoc)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('click', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [moreOpen])
 
   function pick(cat: string | null) {
     if (cat) params.set('cat', cat)
@@ -39,11 +56,12 @@ export default function CategoryBar() {
         ))}
         {overflow.length > 0 && (
           <div className="cat-more-wrap">
-            <button className="cat-pill" onClick={() => setMoreOpen((v) => !v)}>更多 ▾</button>
+            <button className="cat-pill" aria-expanded={moreOpen} aria-haspopup="menu"
+              onClick={() => setMoreOpen((v) => !v)}>更多 ▾</button>
             {moreOpen && (
-              <div className="cat-more-menu">
+              <div className="cat-more-menu" role="menu">
                 {overflow.map((c) => (
-                  <button key={c} className={`cat-more-item ${active === c ? 'is-active' : ''}`} onClick={() => pick(c)}>
+                  <button key={c} className={`cat-more-item ${active === c ? 'is-active' : ''}`} role="menuitem" onClick={() => pick(c)}>
                     {c}
                   </button>
                 ))}

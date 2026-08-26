@@ -17,4 +17,19 @@ describe('Tabs', () => {
     await userEvent.click(screen.getByRole('tab', { name: '收藏夹' }))
     expect(onChange).toHaveBeenCalledWith('favs')
   })
+
+  it('方向键切换 tab（ARIA tabs 模式）', async () => {
+    const onChange = vi.fn()
+    render(<Tabs items={items} active="repos" onChange={onChange} />)
+    await userEvent.click(screen.getByRole('tab', { name: '我的仓库' })) // 先让焦点进入 tablist
+    await userEvent.keyboard('{ArrowRight}')
+    expect(onChange).toHaveBeenCalledWith('favs')
+    await userEvent.keyboard('{ArrowLeft}')
+    expect(onChange).toHaveBeenCalledWith('repos')
+  })
+
+  it('tab 关联面板（aria-controls）', () => {
+    render(<Tabs items={items} active="repos" onChange={() => {}} panelId="test-panel" />)
+    expect(screen.getByRole('tab', { name: '我的仓库' })).toHaveAttribute('aria-controls', 'test-panel')
+  })
 })
