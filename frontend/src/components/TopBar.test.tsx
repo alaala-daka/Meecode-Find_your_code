@@ -31,7 +31,7 @@ describe('TopBar', () => {
 
   it('搜索提交跳转搜索结果页', async () => {
     renderTopBar()
-    const input = screen.getByPlaceholderText('搜索仓库、标签、一句话卖点')
+    const input = screen.getByPlaceholderText('搜索仓库、标签、一句话卖点…')
     await userEvent.type(input, 'agent')
     await userEvent.keyboard('{Enter}')
     expect(navigateSpy).toHaveBeenCalledWith('/search?q=agent')
@@ -64,5 +64,27 @@ describe('TopBar', () => {
     renderTopBar()
     await userEvent.click(screen.getByLabelText('浏览历史'))
     expect(navigateSpy).toHaveBeenCalledWith('/user/alice?tab=history')
+  })
+
+  it('搜索页顶栏保留查询词（规范 §7.2）', () => {
+    render(
+      <MemoryRouter initialEntries={['/search?q=agent']}>
+        <Routes>
+          <Route path="*" element={<TopBar />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    expect(screen.getByRole('textbox', { name: '搜索' })).toHaveValue('agent')
+  })
+
+  it('导航高亮仅首页', () => {
+    render(
+      <MemoryRouter initialEntries={['/repo/1']}>
+        <Routes>
+          <Route path="*" element={<TopBar />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    expect(screen.getByRole('link', { name: '首页' })).not.toHaveClass('is-current')
   })
 })

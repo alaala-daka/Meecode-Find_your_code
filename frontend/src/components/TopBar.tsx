@@ -1,6 +1,6 @@
 // src/components/TopBar.tsx —— 规范 §6.2、§8.3（未登录触达收藏/投稿/历史先弹登录）
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import LoginModal from './LoginModal'
 import historyIcon from '../assets/history-icon.png'
@@ -10,7 +10,14 @@ export default function TopBar() {
   const [q, setQ] = useState('')
   const [loginOpen, setLoginOpen] = useState(false)
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const location = useLocation()
   const user = useAuthStore((s) => s.user)
+
+  // 搜索结果页顶栏保留查询词（规范 §7.2）；其余页不随 URL 回写
+  useEffect(() => {
+    if (location.pathname === '/search') setQ(params.get('q') ?? '')
+  }, [location.pathname, params])
 
   function submitSearch() {
     const kw = q.trim()
@@ -45,16 +52,23 @@ export default function TopBar() {
             </span>
           </Link>
           <nav className="topbar-nav">
-            <Link className="nav-item is-current" to="/">首页</Link>
+            <NavLink
+              className={({ isActive }) => `nav-item${isActive ? ' is-current' : ''}`}
+              to="/"
+              end
+            >首页</NavLink>
           </nav>
         </div>
         <div className="topbar-search">
           <input
             className="search-input"
+            name="q"
+            autoComplete="off"
+            spellCheck={false}
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && submitSearch()}
-            placeholder="搜索仓库、标签、一句话卖点"
+            placeholder="搜索仓库、标签、一句话卖点…"
             aria-label="搜索"
           />
           <button className="search-btn" onClick={submitSearch} aria-label="搜索按钮">
