@@ -24,4 +24,26 @@ describe('LoginModal', () => {
     expect(useAuthStore.getState().user?.login).toBe('alice')
     expect(onClose).toHaveBeenCalled()
   })
+  it('打开时焦点移入弹层', () => {
+    render(<LoginModal open onClose={() => {}} />)
+    expect(screen.getByRole('button', { name: '用 GitHub 登录' })).toHaveFocus()
+  })
+  it('Esc 关闭弹层', async () => {
+    const onClose = vi.fn()
+    render(<LoginModal open onClose={onClose} />)
+    await userEvent.keyboard('{Escape}')
+    expect(onClose).toHaveBeenCalled()
+  })
+  it('有关闭按钮并响应点击', async () => {
+    const onClose = vi.fn()
+    render(<LoginModal open onClose={onClose} />)
+    await userEvent.click(screen.getByRole('button', { name: '关闭登录弹层' }))
+    expect(onClose).toHaveBeenCalled()
+  })
+  it('打开时锁定滚动，关闭后恢复', () => {
+    const { unmount } = render(<LoginModal open onClose={() => {}} />)
+    expect(document.body.style.overflow).toBe('hidden')
+    unmount()
+    expect(document.body.style.overflow).toBe('')
+  })
 })
