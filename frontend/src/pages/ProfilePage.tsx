@@ -10,6 +10,7 @@ import Tabs from '../components/Tabs'
 import TopBar from '../components/TopBar'
 import { useAuthStore } from '../store/authStore'
 import emptyFavorites from '../assets/empty-favorites.png'
+import emptyHistory from '../assets/empty-history.png'
 import emptyRepos from '../assets/empty-repos.png'
 import './ProfilePage.css'
 
@@ -124,7 +125,7 @@ export default function ProfilePage() {
             <EmptyState title={emptyText}
               actionLabel={tab === 'repos' ? '推广我的仓库' : '去首页逛逛'}
               onAction={() => navigate(tab === 'repos' ? '/submit' : '/')}
-              image={tab === 'repos' ? emptyRepos : tab === 'favs' ? emptyFavorites : undefined} />
+              image={tab === 'repos' ? emptyRepos : tab === 'favs' ? emptyFavorites : emptyHistory} />
           ) : (
             <div className="repo-grid">
               {current.map((c) => (

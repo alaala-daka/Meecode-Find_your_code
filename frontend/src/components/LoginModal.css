@@ -13,12 +13,8 @@
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow_float);
 }
-.login-logo {
+.login-logo-img {
   width: 48px; height: 48px;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--brand_blue);
-  color: var(--bg1);
-  border-radius: var(--radius-lg);
-  font-size: 24px; font-weight: 500;
+  object-fit: contain;
 }
 .login-tip { color: var(--text2); font-size: 13px; }
