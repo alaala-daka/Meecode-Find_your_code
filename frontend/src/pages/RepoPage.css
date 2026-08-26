@@ -23,6 +23,7 @@
 .repo-topics { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .repo-head .source-badge { position: static; }
 .repo-head-actions { display: flex; gap: 10px; align-items: flex-start; flex-shrink: 0; }
+.action-error { color: var(--stress_red); font-size: 13px; }
 /* 激活态：收藏=琥珀，点赞=品牌蓝（规范 §6.6） */
 .repo-head-actions .btn-fav.is-on { color: var(--brand_amber); border-color: var(--brand_amber); background: var(--brand_amber_thin); }
 .repo-head-actions .btn-like.is-on { color: var(--brand_blue); border-color: var(--brand_blue); background: var(--brand_blue_thin); }

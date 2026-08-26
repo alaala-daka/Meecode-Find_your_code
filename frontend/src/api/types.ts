@@ -23,6 +23,7 @@ export interface RepoCardData {
 export interface RepoDetail extends RepoCardData {
   intro_zh: string
   github_url: string
+  default_branch: string
   discussions_open: boolean
 }
 

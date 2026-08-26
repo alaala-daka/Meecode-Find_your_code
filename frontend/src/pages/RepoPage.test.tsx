@@ -1,17 +1,22 @@
 // src/pages/RepoPage.test.tsx
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useSearchParams } from 'react-router-dom'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { FIXTURE_USER } from '../api/fixtures'
 import { useAuthStore } from '../store/authStore'
 import RepoPage from './RepoPage'
 
+function ParamProbe() {
+  const [p] = useSearchParams()
+  return <output data-testid="params">{p.toString()}</output>
+}
+
 function renderAt(url: string) {
   return render(
     <MemoryRouter initialEntries={[url]}>
       <Routes>
-        <Route path="/repo/:id" element={<RepoPage />} />
+        <Route path="/repo/:id" element={<><RepoPage /><ParamProbe /></>} />
       </Routes>
     </MemoryRouter>
   )
@@ -71,5 +76,31 @@ describe('RepoPage', () => {
     renderAt('/repo/999')
     expect(await screen.findByText('仓库不存在或已下架')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '回首页' })).toBeInTheDocument()
+  })
+
+  it('tab 切换写入 URL', async () => {
+    renderAt('/repo/1')
+    await screen.findAllByText('README.md')
+    await userEvent.click(screen.getByRole('tab', { name: '仓库解读' }))
+    expect(await screen.findByTestId('params')).toHaveTextContent('tab=explain')
+  })
+
+  it('?file= 深链直接加载指定文件', async () => {
+    renderAt('/repo/1?file=src/main.py')
+    expect(await screen.findByTestId('code-content')).toHaveTextContent('from loop import run')
+  })
+
+  it('点赞失败回滚激活态并提示', async () => {
+    useAuthStore.setState({ user: FIXTURE_USER })
+    const { api } = await import('../api/client')
+    const spy = vi.spyOn(api, 'interact').mockRejectedValueOnce(new Error('boom'))
+    // repo/6 未被其他用例点位过，初始态确定（未点赞）
+    renderAt('/repo/6')
+    await screen.findByText('llm-eval-kit')
+    const btn = screen.getByRole('button', { name: '点赞' })
+    await userEvent.click(btn)
+    await waitFor(() => expect(btn).not.toHaveClass('is-on'))
+    expect(screen.getByRole('alert')).toHaveTextContent('操作失败')
+    spy.mockRestore()
   })
 })

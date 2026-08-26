@@ -1,6 +1,6 @@
 // src/pages/RepoPage.tsx —— 规范 §7.3
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { RepoDetail, RepoFile, RepoTreeItem } from '../api/types'
 import Button from '../components/Button'
@@ -28,15 +28,20 @@ export default function RepoPage() {
   const { id } = useParams()
   const repoId = Number(id)
   const navigate = useNavigate()
+  const [params, setParams] = useSearchParams()
+  const tab = params.get('tab') === 'explain' ? 'explain' : 'files'
+  const fileParam = params.get('file')
   const user = useAuthStore((s) => s.user)
   const [detail, setDetail] = useState<RepoDetail | null>(null)
   const [loadError, setLoadError] = useState(false)
-  const [tab, setTab] = useState('files')
   const [tree, setTree] = useState<RepoTreeItem[]>([])
+  const [treeError, setTreeError] = useState(false)
   const [file, setFile] = useState<RepoFile | null>(null)
   const [fileError, setFileError] = useState(false)
   const [liked, setLiked] = useState(false)
   const [faved, setFaved] = useState(false)
+  const [busy, setBusy] = useState<'like' | 'fav' | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
   const [loginOpen, setLoginOpen] = useState(false)
   const fileReqRef = useRef(0) // 文件请求令牌：丢弃过期响应，防切仓库/快速点文件时旧响应覆盖
 
@@ -48,14 +53,33 @@ export default function RepoPage() {
     api.repoTree(repoId).then((t) => {
       if (!alive) return
       setTree(t)
+      if (fileParam) return // URL 指定文件，交给下方 param effect 加载
       const first = t.find((n) => n.type === 'file')
       if (first) void selectFile(first.path)
-    })
+    }).catch(() => { if (alive) setTreeError(true) })
     api.myLikes().then((ids) => alive && setLiked(ids.includes(repoId)))
     api.myFavorites().then((ids) => alive && setFaved(ids.includes(repoId)))
     return () => { alive = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repoId])
+
+  // URL 文件深链：?file=src/main.py 直接加载指定文件
+  useEffect(() => {
+    if (tab === 'files' && fileParam) void selectFile(fileParam)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fileParam, tab, repoId])
+
+  function switchTab(k: string) {
+    const p = new URLSearchParams(params)
+    p.set('tab', k)
+    setParams(p)
+  }
+
+  function onSelectFile(p: string) {
+    const n = new URLSearchParams(params)
+    n.set('file', p)
+    setParams(n, { replace: true })
+  }
 
   async function selectFile(path: string) {
     const req = ++fileReqRef.current
@@ -77,16 +101,36 @@ export default function RepoPage() {
   }
 
   async function toggleLike() {
+    if (busy) return
     const next = !liked
+    setBusy('like')
+    setActionError(null)
     setLiked(next)
-    await api.interact(repoId, 'like', next)
-    setDetail((d) => d ? { ...d, likes: d.likes + (next ? 1 : -1) } : d)
+    try {
+      await api.interact(repoId, 'like', next)
+      setDetail((d) => d ? { ...d, likes: d.likes + (next ? 1 : -1) } : d)
+    } catch {
+      setLiked(!next) // 回滚乐观更新
+      setActionError('操作失败，请重试')
+    } finally {
+      setBusy(null)
+    }
   }
 
   async function toggleFav() {
+    if (busy) return
     const next = !faved
+    setBusy('fav')
+    setActionError(null)
     setFaved(next)
-    await api.interact(repoId, 'favorite', next)
+    try {
+      await api.interact(repoId, 'favorite', next)
+    } catch {
+      setFaved(!next) // 回滚乐观更新
+      setActionError('操作失败，请重试')
+    } finally {
+      setBusy(null)
+    }
   }
 
   if (loadError) {
@@ -138,23 +182,31 @@ export default function RepoPage() {
           </div>
           <div className="repo-head-actions">
             <a className="btn btn-secondary" href={detail.github_url} target="_blank" rel="noreferrer">去 GitHub ↗</a>
-            <Button variant="ghost" className={`btn-fav ${faved ? 'is-on' : ''}`} onClick={() => gate(() => void toggleFav())}>
+            <Button variant="ghost" className={`btn-fav ${faved ? 'is-on' : ''}`} loading={busy === 'fav'}
+              onClick={() => gate(() => void toggleFav())}>
               {faved ? '已收藏' : '收藏'}
             </Button>
-            <Button variant="ghost" className={`btn-like ${liked ? 'is-on' : ''}`} onClick={() => gate(() => void toggleLike())}>
+            <Button variant="ghost" className={`btn-like ${liked ? 'is-on' : ''}`} loading={busy === 'like'}
+              onClick={() => gate(() => void toggleLike())}>
               {liked ? '已点赞' : '点赞'}
             </Button>
           </div>
+          {actionError && <p className="action-error" role="alert">{actionError}</p>}
         </section>
 
-        <Tabs items={TAB_ITEMS} active={tab} onChange={setTab} />
+        <Tabs items={TAB_ITEMS} active={tab} onChange={switchTab} />
 
-        <div className="repo-tab-body" key={tab}>
+        <div className="repo-tab-body" key={tab} role="tabpanel" aria-label={tab === 'files' ? '文件预览' : '仓库解读'}>
           {tab === 'files' && (
             <div className="repo-files">
-              <FileTree tree={tree} current={file?.path ?? null} onSelect={(p) => void selectFile(p)} />
-              {file && <CodeView file={file} githubUrl={detail.github_url} />}
-              {fileError && (
+              <FileTree tree={tree} current={file?.path ?? null} onSelect={(p) => onSelectFile(p)} />
+              {treeError && (
+                <p className="file-fallback">
+                  文件树加载失败，<a href={detail.github_url} target="_blank" rel="noreferrer">去 GitHub 查看 ↗</a>
+                </p>
+              )}
+              {!treeError && file && <CodeView file={file} githubUrl={detail.github_url} defaultBranch={detail.default_branch} />}
+              {!treeError && fileError && (
                 <p className="file-fallback">
                   文件预览失败，<a href={detail.github_url} target="_blank" rel="noreferrer">去 GitHub 查看 ↗</a>
                 </p>
