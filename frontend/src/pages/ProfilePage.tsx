@@ -31,6 +31,9 @@ export default function ProfilePage() {
   const [editingBio, setEditingBio] = useState(false)
   const [lists, setLists] = useState<Record<'repos' | 'favs' | 'history', RepoCardData[]>>({ repos: [], favs: [], history: [] })
   const [loadError, setLoadError] = useState(false)
+  const finePointer = typeof window.matchMedia === 'function'
+    ? window.matchMedia('(pointer: fine)').matches
+    : true
 
   const loadAll = useCallback(async () => {
     setLoadError(false)
@@ -88,7 +91,7 @@ export default function ProfilePage() {
       <main id="main" className="page-shell profile-page">
         {loadError && <ErrorBanner message="主页加载失败" onRetry={() => void loadAll()} />}
         <header className="profile-head">
-          <div className="profile-avatar" aria-label="头像">
+          <div className="profile-avatar" role="img" aria-label={`${profile.login} 的头像`}>
             {profile.login.slice(0, 1).toUpperCase()}
           </div>
           <div className="profile-info">
@@ -97,9 +100,12 @@ export default function ProfilePage() {
               <input
                 className="bio-input"
                 defaultValue={profile.bio}
-                autoFocus
+                autoFocus={finePointer} // 仅桌面指针设备自动聚焦，避免移动端弹键盘
                 onBlur={(e) => void saveBio(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && void saveBio((e.target as HTMLInputElement).value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void saveBio((e.target as HTMLInputElement).value)
+                  if (e.key === 'Escape') setEditingBio(false)
+                }}
                 aria-label="签名"
               />
             ) : (

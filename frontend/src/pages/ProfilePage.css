@@ -30,7 +30,9 @@
   opacity: 0;
   transition: opacity var(--time-fast), color var(--time-fast);
 }
-.profile-bio:hover .bio-edit { opacity: 1; }
+.profile-bio:hover .bio-edit,
+.profile-bio:focus-within .bio-edit,
+.bio-edit:focus-visible { opacity: 1; }
 .bio-edit:hover { color: var(--brand_blue); }
 .bio-input {
   margin-top: 4px;

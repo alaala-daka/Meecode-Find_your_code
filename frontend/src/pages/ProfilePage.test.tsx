@@ -29,7 +29,7 @@ describe('ProfilePage', () => {
     expect((await screen.findAllByText('alice')).length).toBeGreaterThanOrEqual(2)
     expect(screen.getByText('在写小而可读的系统软件。')).toBeInTheDocument()
     expect(screen.getByText('获赞星')).toBeInTheDocument()
-    expect(screen.getByLabelText('头像')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'alice 的头像' })).toBeInTheDocument()
   })
 
   it('本人视图可就地编辑签名', async () => {
@@ -79,5 +79,18 @@ describe('ProfilePage', () => {
     await screen.findAllByText('mini-agent')
     await userEvent.click(screen.getByRole('button', { name: '下架' }))
     expect(await screen.findByText('你还没有推广过仓库')).toBeInTheDocument()
+  })
+
+  it('Esc 取消编辑签名', async () => {
+    useAuthStore.setState({ user: FIXTURE_USER })
+    renderAt('/user/alice')
+    await screen.findAllByText('alice')
+    await userEvent.click(screen.getByLabelText('编辑签名'))
+    const input = screen.getByDisplayValue('在写小而可读的系统软件。')
+    await userEvent.clear(input)
+    await userEvent.type(input, '不保存的签名')
+    await userEvent.keyboard('{Escape}')
+    expect(screen.getByText('在写小而可读的系统软件。')).toBeInTheDocument()
+    expect(screen.queryByDisplayValue('不保存的签名')).not.toBeInTheDocument()
   })
 })
