@@ -53,9 +53,10 @@ export default function HomePage() {
     <>
       <TopBar />
       <CategoryBar />
-      <main className="page-shell">
-        {error && cards.length === 0 && (
-          <ErrorBanner message={error} onRetry={() => void load(useFeedStore.getState().category)} />
+      <h1 className="visually-hidden">觅码 · 发现潜力开源仓库</h1>
+      <main id="main" className="page-shell">
+        {error && (
+          <ErrorBanner message="加载失败，请重试" onRetry={() => void load(useFeedStore.getState().category)} />
         )}
         {cards.length === 0 && loading && <SkeletonGrid count={10} />}
         {showEmpty && (

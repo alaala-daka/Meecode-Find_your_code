@@ -69,12 +69,12 @@ export default function ProfilePage() {
   }
 
   if (!profile && !loadError) {
-    return (<><TopBar /><main className="page-shell"><p className="profile-loading">加载中…</p></main></>)
+    return (<><TopBar /><main id="main" className="page-shell"><p className="profile-loading">加载中…</p></main></>)
   }
 
   if (!profile) {
     // 初次加载失败：profile 尚为 null，不能落入主渲染（profile.login 会崩），独立错误分支兜底
-    return (<><TopBar /><main className="page-shell"><ErrorBanner message="主页加载失败" onRetry={() => void loadAll()} /></main></>)
+    return (<><TopBar /><main id="main" className="page-shell"><ErrorBanner message="主页加载失败" onRetry={() => void loadAll()} /></main></>)
   }
 
   const current = lists[tab as 'repos' | 'favs' | 'history'] ?? []
@@ -85,7 +85,7 @@ export default function ProfilePage() {
     <>
       <TopBar />
       <div className="profile-banner" aria-hidden="true" />
-      <main className="page-shell profile-page">
+      <main id="main" className="page-shell profile-page">
         {loadError && <ErrorBanner message="主页加载失败" onRetry={() => void loadAll()} />}
         <header className="profile-head">
           <div className="profile-avatar" aria-label="头像">

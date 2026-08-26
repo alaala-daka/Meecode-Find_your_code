@@ -44,4 +44,9 @@ describe('App 路由冒烟', () => {
     renderAt('/no-such-page')
     expect((await screen.findAllByText('mini-agent')).length).toBeGreaterThanOrEqual(2)
   })
+
+  it('提供跳转主内容链接', () => {
+    renderAt('/')
+    expect(screen.getByRole('link', { name: '跳转到主要内容' })).toHaveAttribute('href', '#main')
+  })
 })

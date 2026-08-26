@@ -101,6 +101,7 @@ export default function SearchPage() {
   return (
     <>
       <TopBar />
+      <h1 className="visually-hidden">搜索「{q}」</h1>
       <main id="main" className="page-shell search-page">
         {!q && <EmptyState title="在顶栏输入关键词开始搜索" />}
         {q && (

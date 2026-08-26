@@ -87,7 +87,7 @@ export default function SubmitPage() {
     return (
       <>
         <TopBar />
-        <main className="page-shell submit-page">
+        <main id="main" className="page-shell submit-page">
           <div className="submit-login-guard">
             <p className="guard-title">用 GitHub 登录后即可推广你的仓库</p>
             <Button onClick={() => setLoginOpen(true)}>用 GitHub 登录</Button>
@@ -101,7 +101,7 @@ export default function SubmitPage() {
   return (
     <>
       <TopBar />
-      <main className="page-shell submit-page">
+      <main id="main" className="page-shell submit-page">
         <ol className="steps">
           {STEPS.map((s, i) => (
             <li key={s} className={`step ${i === step ? 'is-current' : ''} ${i < step ? 'is-done' : ''}`}>

@@ -11,6 +11,7 @@ import './App.css'
 export default function App() {
   return (
     <>
+      <a className="skip-link" href="#main">跳转到主要内容</a>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/search" element={<SearchPage />} />

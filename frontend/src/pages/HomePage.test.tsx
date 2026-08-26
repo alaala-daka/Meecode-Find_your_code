@@ -2,6 +2,7 @@
 import { act, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { FIXTURE_REPOS } from '../api/fixtures'
 import { useFeedStore } from '../store/feedStore'
 import { mockIntersectionObserver } from '../test/mockIntersectionObserver'
 import HomePage from './HomePage'
@@ -52,7 +53,22 @@ describe('HomePage', () => {
   it('错误态显示重试', async () => {
     useFeedStore.setState({ cards: [], loading: false, error: '网络开小差了', hasMore: false, page: 1, category: null })
     render(<HomePage />, { wrapper: MemoryRouter })
-    expect(await screen.findByText('网络开小差了')).toBeInTheDocument()
+    expect(await screen.findByText('加载失败，请重试')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '重试' })).toBeInTheDocument()
+  })
+
+  it('页面提供 h1 标题', async () => {
+    render(<HomePage />, { wrapper: MemoryRouter })
+    await screen.findAllByText('mini-agent')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('觅码')
+  })
+
+  it('翻页失败时错误条仍可见（已有卡片）', async () => {
+    useFeedStore.setState({
+      cards: [FIXTURE_REPOS[0]], loading: false, error: '某错误',
+      hasMore: false, page: 1, category: null,
+    })
+    render(<HomePage />, { wrapper: MemoryRouter })
+    expect(await screen.findByText('加载失败，请重试')).toBeInTheDocument()
   })
 })

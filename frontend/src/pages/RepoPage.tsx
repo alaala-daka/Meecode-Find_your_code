@@ -93,7 +93,7 @@ export default function RepoPage() {
     return (
       <>
         <TopBar />
-        <main className="page-shell">
+        <main id="main" className="page-shell">
           <EmptyState title="仓库不存在或已下架" actionLabel="回首页" onAction={() => navigate('/')} />
         </main>
       </>
@@ -101,13 +101,13 @@ export default function RepoPage() {
   }
 
   if (!detail) {
-    return (<><TopBar /><main className="page-shell"><p className="repo-loading">加载中…</p></main></>)
+    return (<><TopBar /><main id="main" className="page-shell"><p className="repo-loading">加载中…</p></main></>)
   }
 
   return (
     <>
       <TopBar />
-      <main className="page-shell repo-page">
+      <main id="main" className="page-shell repo-page">
         <section className="repo-head" style={{ borderTop: `3px solid ${languageColor(detail.language)}` }}>
           <div className="repo-head-main">
             <h1 className="repo-name">{detail.title}</h1>
