@@ -40,4 +40,14 @@ describe('RepoCard', () => {
     rerender(<RepoCard data={{ ...card, source: 'crawled' }} />)
     expect(screen.getByText('采集')).toHaveClass('badge-crawled')
   })
+  it('常驻统计与悬停遮罩位于同一封面内（互斥显示由 CSS 控制）', () => {
+    renderCard(card)
+    const cover = screen.getAllByRole('link', { name: 'mini-agent' })[0]
+    const pill = cover.querySelector('.star-pill')
+    const mask = cover.querySelector('.hover-mask')
+    expect(pill).toBeTruthy()
+    expect(mask).toBeTruthy()
+    expect(mask).toHaveTextContent('3100')
+    expect(mask).toHaveTextContent('45')
+  })
 })

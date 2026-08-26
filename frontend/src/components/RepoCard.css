@@ -46,6 +46,7 @@
   color: var(--bg1);
   font-family: var(--font-mono);
   font-size: 12px;
+  transition: opacity var(--time-fast) var(--ease); /* 悬停时淡出，避免与统计遮罩重叠 */
 }
 .star-icon { color: var(--brand_amber); }
 .lang-dot { width: 8px; height: 8px; border-radius: 50%; }
@@ -63,7 +64,11 @@
   opacity: 0;
   transition: opacity var(--time-slow) var(--ease);
 }
-.repo-card-cover:hover .hover-mask { opacity: 1; }
+/* 悬停或键盘聚焦（触屏 tap 聚焦）时：常驻胶囊淡出、统计遮罩淡入，互斥避免重叠 */
+.repo-card-cover:hover .hover-mask,
+.repo-card-cover:focus-within .hover-mask { opacity: 1; }
+.repo-card-cover:hover .star-pill,
+.repo-card-cover:focus-within .star-pill { opacity: 0; }
 
 /* 仓库名即代码：等宽字型承载，是全站身份的一部分 */
 .repo-card-title {
