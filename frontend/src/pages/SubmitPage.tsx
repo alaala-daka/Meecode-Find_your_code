@@ -29,6 +29,7 @@ export default function SubmitPage() {
   const [category, setCategory] = useState('')
   const [drafting, setDrafting] = useState(false)
   const [publishing, setPublishing] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
   const [loginOpen, setLoginOpen] = useState(false)
 
   useEffect(() => {
@@ -37,27 +38,49 @@ export default function SubmitPage() {
     void api.categories().then((cs) => { setCats(cs); setCategory(cs[0]) })
   }, [user])
 
+  // 未保存变更离开提醒（编辑推广页有内容时）
+  useEffect(() => {
+    if (step !== 1) return
+    const dirty = tagline.trim().length > 0 || intro.trim().length > 0
+    if (!dirty) return
+    const onBeforeUnload = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = '' }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [step, tagline, intro])
+
   async function aiDraft() {
     if (!picked) return
     setDrafting(true)
-    const draft = await api.aiDraft(picked.id)
-    setTagline(draft.tagline_zh.slice(0, TAGLINE_MAX))
-    setIntro(draft.intro_zh)
-    setDrafting(false)
+    setActionError(null)
+    try {
+      const draft = await api.aiDraft(picked.id)
+      setTagline(draft.tagline_zh.slice(0, TAGLINE_MAX))
+      setIntro(draft.intro_zh)
+    } catch {
+      setActionError('AI 生成失败，可先手写，稍后再试')
+    } finally {
+      setDrafting(false)
+    }
   }
 
   async function publish() {
     if (!picked || !tagline.trim()) return
     setPublishing(true)
-    await api.submitRepo({
-      full_name: picked.full_name,
-      tagline_zh: tagline.trim(),
-      intro_zh: intro,
-      category,
-      cover_url: null,
-    })
-    setPublishing(false)
-    setStep(2)
+    setActionError(null)
+    try {
+      await api.submitRepo({
+        full_name: picked.full_name,
+        tagline_zh: tagline.trim(),
+        intro_zh: intro,
+        category,
+        cover_url: null,
+      })
+      setStep(2)
+    } catch {
+      setActionError('发布失败，请重试')
+    } finally {
+      setPublishing(false)
+    }
   }
 
   if (!user) {
@@ -113,24 +136,30 @@ export default function SubmitPage() {
           <section className="submit-edit">
             <div className="edit-form">
               <label className="field">
-                <span className="field-label">一句话卖点（必填，{TAGLINE_MAX} 字内）</span>
-                <input value={tagline} maxLength={TAGLINE_MAX}
+                <span className="field-label">
+                  一句话卖点（必填）
+                  <span className="tagline-count" aria-live="polite">（{tagline.length}/{TAGLINE_MAX}）</span>
+                </span>
+                <input name="tagline" autoComplete="off" value={tagline} maxLength={TAGLINE_MAX}
                   onChange={(e) => setTagline(e.target.value)} aria-label="一句话卖点" />
               </label>
               <label className="field">
                 <span className="field-label">详细介绍</span>
-                <textarea rows={6} value={intro} onChange={(e) => setIntro(e.target.value)} aria-label="详细介绍" />
+                <textarea name="intro" autoComplete="off" rows={6} value={intro}
+                  onChange={(e) => setIntro(e.target.value)} aria-label="详细介绍" />
               </label>
-              <div className="field">
+              <div className="field" role="group" aria-label="分类">
                 <span className="field-label">分类</span>
                 <div className="cat-pills">
                   {cats.map((c) => (
-                    <button key={c} className={`cat-pill ${category === c ? 'is-active' : ''}`} onClick={() => setCategory(c)}>
+                    <button key={c} className={`cat-pill ${category === c ? 'is-active' : ''}`}
+                      aria-pressed={category === c} onClick={() => setCategory(c)}>
                       {c}
                     </button>
                   ))}
                 </div>
               </div>
+              {actionError && <p className="action-error" role="alert">{actionError}</p>}
               <div className="edit-actions">
                 <Button variant="secondary" loading={drafting} onClick={() => void aiDraft()}>AI 帮我写</Button>
                 <Button disabled={!tagline.trim()} loading={publishing} onClick={() => void publish()}>发布</Button>

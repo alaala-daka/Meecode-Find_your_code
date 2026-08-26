@@ -57,4 +57,42 @@ describe('SubmitPage', () => {
     expect(await screen.findByText('已发布，进入首发曝光窗口')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '查看我的主页' })).toBeInTheDocument()
   })
+
+  it('AI 生成失败提示且不阻塞手写', async () => {
+    useAuthStore.setState({ user: FIXTURE_USER })
+    const { api } = await import('../api/client')
+    const spy = vi.spyOn(api, 'aiDraft').mockRejectedValueOnce(new Error('boom'))
+    renderPage()
+    // 前序用例发布过同名仓库（mock 状态共享），存在多个 mini-agent 输入
+    await userEvent.click((await screen.findAllByLabelText(/mini-agent/))[0])
+    await userEvent.click(screen.getByRole('button', { name: '下一步' }))
+    await userEvent.click(screen.getByRole('button', { name: 'AI 帮我写' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('AI 生成失败')
+    expect(screen.getByRole('button', { name: 'AI 帮我写' })).toBeEnabled()
+    spy.mockRestore()
+  })
+
+  it('发布失败显示提示且按钮恢复', async () => {
+    useAuthStore.setState({ user: FIXTURE_USER })
+    const { api } = await import('../api/client')
+    const spy = vi.spyOn(api, 'submitRepo').mockRejectedValueOnce(new Error('boom'))
+    renderPage()
+    await userEvent.click((await screen.findAllByLabelText(/mini-agent/))[0])
+    await userEvent.click(screen.getByRole('button', { name: '下一步' }))
+    await userEvent.type(screen.getByLabelText('一句话卖点'), '手写卖点')
+    await userEvent.click(screen.getByRole('button', { name: '发布' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('发布失败')
+    expect(screen.getByRole('button', { name: '发布' })).toBeEnabled()
+    spy.mockRestore()
+  })
+
+  it('卖点字数计数实时更新', async () => {
+    useAuthStore.setState({ user: FIXTURE_USER })
+    renderPage()
+    await userEvent.click((await screen.findAllByLabelText(/mini-agent/))[0])
+    await userEvent.click(screen.getByRole('button', { name: '下一步' }))
+    const input = screen.getByLabelText('一句话卖点')
+    await userEvent.type(input, 'abcde')
+    expect(screen.getByText(/5\/40/)).toBeInTheDocument()
+  })
 })
