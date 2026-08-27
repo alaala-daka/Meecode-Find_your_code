@@ -10,7 +10,7 @@ import './App.css'
 
 export default function App() {
   return (
-    <>
+    <div id="app-root">
       <a className="skip-link" href="#main">跳转到主要内容</a>
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -21,6 +21,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <SiteFooter />
-    </>
+    </div>
   )
 }

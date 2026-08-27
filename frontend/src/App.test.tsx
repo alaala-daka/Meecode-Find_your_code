@@ -1,4 +1,6 @@
 // src/App.test.tsx —— 全路由冒烟：每条路由可渲染、无崩溃
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -48,5 +50,20 @@ describe('App 路由冒烟', () => {
   it('提供跳转主内容链接', () => {
     renderAt('/')
     expect(screen.getByRole('link', { name: '跳转到主要内容' })).toHaveAttribute('href', '#main')
+  })
+
+  it('app-root 存在且页脚是其最后一个子元素', () => {
+    renderAt('/')
+    const root = document.querySelector('#app-root')
+    expect(root).not.toBeNull()
+    const children = Array.from(root!.children)
+    expect(children.length).toBeGreaterThan(1)
+    expect(children[children.length - 1]).toHaveClass('site-footer')
+  })
+
+  it('app-shell 样式契约：纵向弹性撑满，main 占满剩余空间', () => {
+    const css = readFileSync(resolve(__dirname, 'App.css'), 'utf-8')
+    expect(css).toContain('#app-root { display: flex; flex-direction: column; min-height: 100dvh; }')
+    expect(css).toContain('#app-root main { flex: 1; }')
   })
 })
