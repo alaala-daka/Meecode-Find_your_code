@@ -9,8 +9,8 @@ const css = readFileSync(resolve(__dirname, 'theme.css'), 'utf-8')
 describe('theme.css token 契约', () => {
   it.each([
     ['--bg1', '#FFFEFB'],
-    ['--bg2', '#FCF7EA'],
-    ['--bg3', '#FAF2E0'],
+    ['--bg2', '#F9EFDB'],
+    ['--bg3', '#F4E4C2'],
     ['--text1', '#2F2A22'],
     ['--text2', '#6E6558'],
     ['--text3', '#9C9284'],
