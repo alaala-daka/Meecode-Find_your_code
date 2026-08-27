@@ -17,6 +17,8 @@ LLM_MOCK: bool = os.getenv("LLM_MOCK", "").lower() in ("1", "true", "yes")
 
 TAVILY_API_KEY: str = os.getenv("TAVILY_API_KEY", "")
 
+GITHUB_TOKEN: str = os.getenv("GITHUB_TOKEN", "")
+
 
 def llm_configured() -> bool:
     return LLM_MOCK or (bool(LLM_API_KEY) and "在这里填入" not in LLM_API_KEY)

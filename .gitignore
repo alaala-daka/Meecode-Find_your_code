@@ -2,3 +2,9 @@ node_modules/
 dist/
 .claude/
 .superpowers/
+
+# backend (Python)
+__pycache__/
+*.pyc
+.env
+.pytest_cache/
