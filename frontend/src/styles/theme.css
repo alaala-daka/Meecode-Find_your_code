@@ -50,6 +50,10 @@
     Menlo, "Liberation Mono", "Courier New", monospace;
   /* 个人页横幅细纹理（规范 §7.5 实时生成、零图片） */
   --dot_texture: rgba(255, 254, 251, 0.16);
+  /* 个人页横幅（2026-08-27 五项改进 §3.1：深蓝底白字，延伸覆盖整个头部） */
+  --profile_banner: linear-gradient(135deg, #0A4E8A 0%, #15619E 60%, #2E77AE 100%);
+  --on_banner: #FFFDF8;
+  --on_banner_dim: rgba(255, 254, 251, 0.72);
   /* 布局（§5 增补）：流式内容区，压缩左右留空，常规桌面即五列 */
   --shell-max: 1600px;
   --shell-pad: 24px;

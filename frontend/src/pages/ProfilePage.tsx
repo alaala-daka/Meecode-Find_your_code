@@ -87,10 +87,8 @@ export default function ProfilePage() {
   return (
     <>
       <TopBar />
-      <div className="profile-banner" aria-hidden="true" />
-      <main id="main" className="page-shell profile-page">
-        {loadError && <ErrorBanner message="主页加载失败" onRetry={() => void loadAll()} />}
-        <header className="profile-head">
+      <div className="profile-banner">
+        <header className="page-shell profile-head-wrap">
           <div className="profile-avatar" role="img" aria-label={`${profile.login} 的头像`}>
             {profile.login.slice(0, 1).toUpperCase()}
           </div>
@@ -123,7 +121,9 @@ export default function ProfilePage() {
             </p>
           </div>
         </header>
-
+      </div>
+      <main id="main" className="page-shell profile-page">
+        {loadError && <ErrorBanner message="主页加载失败" onRetry={() => void loadAll()} />}
         <Tabs
           items={TAB_ITEMS.map((t) => ({ ...t, count: lists[t.key as 'repos' | 'favs' | 'history'].length }))}
           active={tab}

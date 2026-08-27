@@ -23,13 +23,16 @@ describe('ProfilePage', () => {
     vi.restoreAllMocks()
   })
 
-  it('横幅、骑线头像、签名与数据行', async () => {
+  it('头部整体位于横幅内', async () => {
     renderAt('/user/alice')
     // login 在主页标题与本人仓库卡作者名双渲染（同 Task 8 findAllByText 约定）
     expect((await screen.findAllByText('alice')).length).toBeGreaterThanOrEqual(2)
     expect(screen.getByText('在写小而可读的系统软件。')).toBeInTheDocument()
     expect(screen.getByText('获赞星')).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'alice 的头像' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'alice 的头像' }).closest('.profile-banner')).not.toBeNull()
+    // 横幅不再是纯装饰：aria-hidden 应已被移除
+    expect(document.querySelector('.profile-banner')!.getAttribute('aria-hidden')).toBeNull()
   })
 
   it('本人视图可就地编辑签名', async () => {
