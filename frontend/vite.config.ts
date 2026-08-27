@@ -6,7 +6,13 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    proxy: { '/api': 'http://localhost:8000' }
+    proxy: {
+      '/api': 'http://localhost:8000',
+      '/explain-api': {
+        target: 'http://localhost:8100',
+        rewrite: (p) => p.replace(/^\/explain-api/, '/api'),
+      },
+    },
   },
   test: {
     globals: true,

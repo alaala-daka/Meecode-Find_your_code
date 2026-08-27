@@ -42,11 +42,15 @@ describe('RepoPage', () => {
     expect(screen.getByTestId('code-content')).toHaveTextContent('from loop import run')
   })
 
-  it('切换到解读占位', async () => {
+  it('切换到解读面板，后端不可达时显示错误降级', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new TypeError('mock: offline'))))
     renderAt('/repo/1')
     await screen.findAllByText('README.md')
     await userEvent.click(screen.getByRole('tab', { name: '仓库解读' }))
-    expect(screen.getByText('解读功能建设中')).toBeInTheDocument()
+    expect(await screen.findByText('解读服务暂不可用')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '重试' })).toBeInTheDocument()
+    expect(await screen.findByTestId('params')).toHaveTextContent('tab=explain')
+    vi.unstubAllGlobals()
   })
 
   it('未登录点赞触发登录弹层', async () => {
@@ -136,8 +140,10 @@ describe('RepoPage', () => {
     expect(readme!.compareDocumentPosition(discuss!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
-  it('?tab=explain 深链直达解读占位', async () => {
+  it('?tab=explain 深链直达解读面板', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new TypeError('mock: offline'))))
     renderAt('/repo/1?tab=explain')
-    expect(await screen.findByText('解读功能建设中')).toBeInTheDocument()
+    expect(await screen.findByText('解读服务暂不可用')).toBeInTheDocument()
+    vi.unstubAllGlobals()
   })
 })

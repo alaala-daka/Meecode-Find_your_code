@@ -33,16 +33,6 @@
 .file-fallback { padding: 40px; color: var(--text3); font-size: 13px; }
 .file-fallback a { color: var(--brand_blue); }
 
-.explain-placeholder {
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-  padding: 80px 0;
-  background: var(--bg1);
-  border-radius: var(--radius-lg);
-}
-.explain-img { width: 240px; height: 160px; object-fit: contain; margin-bottom: 8px; }
-.explain-title { font-size: 16px; font-weight: 500; color: var(--text2); }
-.explain-sub { font-size: 13px; color: var(--text3); }
-
 /* 窄屏：文件树改上树下码 */
 @media (max-width: 760px) {
   .repo-files { flex-direction: column; }
