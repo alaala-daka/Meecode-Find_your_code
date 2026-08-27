@@ -68,6 +68,14 @@ export function createMockClient(): ApiClient {
       if (content === undefined) throw new Error('文件不存在')
       return { path, content }
     },
+    async related(repoId): Promise<RepoCardData[]> {
+      const self = state.repos.find((r) => r.id === repoId)
+      if (!self) throw new Error('仓库不存在')
+      return state.repos
+        .filter((r) => r.category === self.category && r.id !== repoId)
+        .sort((a, b) => b.stars - a.stars)
+        .slice(0, 3)
+    },
     async myRepos(): Promise<RepoCardData[]> {
       return state.repos.filter((r) => r.source === 'submitted' && r.owner_login === FIXTURE_USER.login)
     },

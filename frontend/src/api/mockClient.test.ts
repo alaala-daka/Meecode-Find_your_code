@@ -53,4 +53,18 @@ describe('mockClient', () => {
     await api.delist(1)
     await expect(api.repo(1)).rejects.toThrow('仓库不存在')
   })
+  it('related：同分类 stars 降序、排除自身、至多 3 条', async () => {
+    const api = createMockClient()
+    // fixture：AI 与机器学习 只有 1(128★) 与 6(210★)，排除自身(1)剩 llm-eval-kit
+    const rel = await api.related(1)
+    expect(rel.map((r) => r.id)).toEqual([6])
+  })
+  it('related：同分类仅自身时返回空数组（严格不跨类补位，决策 #7）', async () => {
+    const api = createMockClient()
+    expect(await api.related(11)).toEqual([]) // 其他 分类仅 pixel-sort 自己
+  })
+  it('related：仓库不存在 reject', async () => {
+    const api = createMockClient()
+    await expect(api.related(999)).rejects.toThrow('仓库不存在')
+  })
 })

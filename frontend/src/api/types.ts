@@ -73,6 +73,7 @@ export interface ApiClient {
   repo(id: number): Promise<RepoDetail>
   repoTree(id: number): Promise<RepoTreeItem[]>
   repoFile(id: number, path: string): Promise<RepoFile>
+  related(repoId: number): Promise<RepoCardData[]>
   myRepos(): Promise<RepoCardData[]>
   submitRepo(payload: SubmitPayload): Promise<RepoCardData>
   aiDraft(repoId: number): Promise<{ tagline_zh: string; intro_zh: string }>
