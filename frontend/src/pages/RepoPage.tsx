@@ -3,12 +3,14 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { RepoDetail, RepoFile, RepoTreeItem } from '../api/types'
-import Button from '../components/Button'
 import Capsule from '../components/Capsule'
 import CodeView from '../components/CodeView'
 import EmptyState from '../components/EmptyState'
 import FileTree from '../components/FileTree'
+import IconAction from '../components/IconAction'
 import LoginModal from '../components/LoginModal'
+import ReadmeSection from '../components/ReadmeSection'
+import RepoRail from '../components/RepoRail'
 import Tabs from '../components/Tabs'
 import TopBar from '../components/TopBar'
 import { useAuthStore } from '../store/authStore'
@@ -125,6 +127,7 @@ export default function RepoPage() {
     setFaved(next)
     try {
       await api.interact(repoId, 'favorite', next)
+      setDetail((d) => (d && d.favorites_count != null ? { ...d, favorites_count: d.favorites_count + (next ? 1 : -1) } : d))
     } catch {
       setFaved(!next) // 回滚乐观更新
       setActionError('操作失败，请重试')
@@ -152,84 +155,85 @@ export default function RepoPage() {
     <>
       <TopBar />
       <main id="main" className="page-shell repo-page">
-        <section className="repo-head" style={{ borderTop: `3px solid ${languageColor(detail.language)}` }}>
-          <div className="repo-head-main">
-            <h1 className="repo-name">{detail.title}</h1>
-            <p className="repo-tagline">{detail.tagline_zh}</p>
-            <p className="repo-meta">
-              <span className="repo-stars">★ {formatCount(detail.stars)}</span>
-              {detail.language && (
-                <span className="repo-lang">
-                  <span className="lang-dot" style={{ backgroundColor: languageColor(detail.language) }} aria-hidden="true" />
-                  {detail.language}
+        <div className="repo-grid">
+          <div className="repo-main">
+            <section className="repo-head" style={{ borderTop: `3px solid ${languageColor(detail.language)}` }}>
+              <h1 className="repo-name">{detail.title}</h1>
+              <p className="repo-tagline">{detail.tagline_zh}</p>
+              <p className="repo-meta">
+                <span className="repo-stars">★ {formatCount(detail.stars)}</span>
+                {detail.language && (
+                  <span className="repo-lang">
+                    <span className="lang-dot" style={{ backgroundColor: languageColor(detail.language) }} aria-hidden="true" />
+                    {detail.language}
+                  </span>
+                )}
+                <span>浏览 {formatCount(detail.views)}</span>
+                <span>{formatTime(detail.published_at)}发布</span>
+                <span className={`source-badge badge-${detail.source}`}>
+                  {detail.source === 'submitted' ? '投稿' : '采集'}
                 </span>
-              )}
-              <span>浏览 {formatCount(detail.views)}</span>
-              <span>{formatTime(detail.published_at)}发布</span>
-              <span className={`source-badge badge-${detail.source}`}>
-                {detail.source === 'submitted' ? '投稿' : '采集'}
-              </span>
-            </p>
-            {detail.topics.length > 0 && (
-              <p className="repo-topics">
-                {detail.topics.map((t) => (
-                  <Capsule key={t} label={t}
-                    bg={capsuleBg(languageColor(detail.language))}
-                    fg={capsuleText(languageColor(detail.language))} />
-                ))}
+                <span className="repo-meta-actions">
+                  <IconAction kind="like" on={liked} count={detail.likes} busy={busy === 'like'}
+                    onClick={() => gate(() => void toggleLike())} />
+                  <IconAction kind="favorite" on={faved} count={detail.favorites_count} busy={busy === 'fav'}
+                    onClick={() => gate(() => void toggleFav())} />
+                </span>
               </p>
-            )}
-          </div>
-          <div className="repo-head-actions">
-            <a className="btn btn-secondary" href={detail.github_url} target="_blank" rel="noreferrer">去 GitHub ↗</a>
-            <Button variant="ghost" className={`btn-fav ${faved ? 'is-on' : ''}`} loading={busy === 'fav'}
-              onClick={() => gate(() => void toggleFav())}>
-              {faved ? '已收藏' : '收藏'}
-            </Button>
-            <Button variant="ghost" className={`btn-like ${liked ? 'is-on' : ''}`} loading={busy === 'like'}
-              onClick={() => gate(() => void toggleLike())}>
-              {liked ? '已点赞' : '点赞'}
-            </Button>
-          </div>
-          {actionError && <p className="action-error" role="alert">{actionError}</p>}
-        </section>
-
-        <Tabs items={TAB_ITEMS} active={tab} onChange={switchTab} panelId="repo-tab-panel" />
-
-        <div className="repo-tab-body" key={tab} id="repo-tab-panel" role="tabpanel" aria-label={tab === 'files' ? '文件预览' : '仓库解读'}>
-          {tab === 'files' && (
-            <div className="repo-files">
-              <FileTree tree={tree} current={file?.path ?? null} onSelect={(p) => onSelectFile(p)} />
-              {treeError && (
-                <p className="file-fallback">
-                  文件树加载失败，<a href={detail.github_url} target="_blank" rel="noreferrer">去 GitHub 查看 ↗</a>
+              {detail.topics.length > 0 && (
+                <p className="repo-topics">
+                  {detail.topics.map((t) => (
+                    <Capsule key={t} label={t}
+                      bg={capsuleBg(languageColor(detail.language))}
+                      fg={capsuleText(languageColor(detail.language))} />
+                  ))}
                 </p>
               )}
-              {!treeError && file && <CodeView file={file} githubUrl={detail.github_url} defaultBranch={detail.default_branch} />}
-              {!treeError && fileError && (
-                <p className="file-fallback">
-                  文件预览失败，<a href={detail.github_url} target="_blank" rel="noreferrer">去 GitHub 查看 ↗</a>
-                </p>
+              {actionError && <p className="action-error" role="alert">{actionError}</p>}
+            </section>
+
+            <Tabs items={TAB_ITEMS} active={tab} onChange={switchTab} panelId="repo-tab-panel" />
+
+            <div className="repo-tab-body" key={tab} id="repo-tab-panel" role="tabpanel" aria-label={tab === 'files' ? '文件预览' : '仓库解读'}>
+              {tab === 'files' && (
+                <div className="repo-files">
+                  <FileTree tree={tree} current={file?.path ?? null} onSelect={(p) => onSelectFile(p)} />
+                  {treeError && (
+                    <p className="file-fallback">
+                      文件树加载失败，<a href={detail.github_url} target="_blank" rel="noreferrer">去 GitHub 查看 ↗</a>
+                    </p>
+                  )}
+                  {!treeError && file && <CodeView file={file} githubUrl={detail.github_url} defaultBranch={detail.default_branch} />}
+                  {!treeError && fileError && (
+                    <p className="file-fallback">
+                      文件预览失败，<a href={detail.github_url} target="_blank" rel="noreferrer">去 GitHub 查看 ↗</a>
+                    </p>
+                  )}
+                </div>
+              )}
+              {tab === 'explain' && (
+                <div className="explain-placeholder">
+                  <img className="explain-img" src={explainPlaceholder} alt="" aria-hidden="true" />
+                  <p className="explain-title">解读功能建设中</p>
+                  <p className="explain-sub">AI 将把这个仓库讲给中文开发者听（第 2 块规划）</p>
+                </div>
               )}
             </div>
-          )}
-          {tab === 'explain' && (
-            <div className="explain-placeholder">
-              <img className="explain-img" src={explainPlaceholder} alt="" aria-hidden="true" />
-              <p className="explain-title">解读功能建设中</p>
-              <p className="explain-sub">AI 将把这个仓库讲给中文开发者听（第 2 块规划）</p>
-            </div>
-          )}
+
+            <ReadmeSection repoId={repoId} tree={tree} />
+
+            <section className="repo-discussions">
+              <h2 className="discussions-title">讨论</h2>
+              {detail.discussions_open ? (
+                <p className="discussions-body">评论区（giscus，后端就绪后接入）</p>
+              ) : (
+                <p className="discussions-closed">作者未开启讨论</p>
+              )}
+            </section>
+          </div>
+
+          <RepoRail repo={detail} />
         </div>
-
-        <section className="repo-discussions">
-          <h2 className="discussions-title">讨论</h2>
-          {detail.discussions_open ? (
-            <p className="discussions-body">评论区（giscus，后端就绪后接入）</p>
-          ) : (
-            <p className="discussions-closed">作者未开启讨论</p>
-          )}
-        </section>
 
         <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
       </main>

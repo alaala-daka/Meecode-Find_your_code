@@ -29,9 +29,8 @@ describe('RepoPage', () => {
     renderAt('/repo/1')
     expect(await screen.findByText('mini-agent')).toBeInTheDocument()
     expect(screen.getByText('给 LLM Agent 的最小运行时，200 行可读完')).toBeInTheDocument()
-    // 实现文案为「去 GitHub ↗」（与 CodeView/降级链接一致），匹配需含箭头
-    const gh = screen.getByText('去 GitHub ↗')
-    expect(gh.closest('a')).toHaveAttribute('href', 'https://github.com/alice/mini-agent')
+    const gh = screen.getByRole('link', { name: '跳转 GitHub ↗' })
+    expect(gh).toHaveAttribute('href', 'https://github.com/alice/mini-agent')
   })
 
   it('默认展示文件预览，可切换文件', async () => {
@@ -102,5 +101,43 @@ describe('RepoPage', () => {
     await waitFor(() => expect(btn).not.toHaveClass('is-on'))
     expect(screen.getByRole('alert')).toHaveTextContent('操作失败')
     spy.mockRestore()
+  })
+
+  it('双列骨架：右栏作者卡常驻，同类推荐来自同分类', async () => {
+    renderAt('/repo/1')
+    await screen.findByText('mini-agent')
+    expect(screen.getByRole('link', { name: '浏览创作者其他仓库' })).toHaveAttribute('href', '/user/alice')
+    const rail = await screen.findByLabelText('同类推荐')
+    expect(rail.querySelectorAll('.repo-card')).toHaveLength(1)
+  })
+
+  it('元信息行带图标计数按钮：心形=likes 数，金星=favorites_count 数', async () => {
+    renderAt('/repo/1')
+    await screen.findByText('mini-agent')
+    expect(screen.getByRole('button', { name: '点赞' })).toHaveTextContent('45')
+    expect(screen.getByRole('button', { name: '收藏' })).toHaveTextContent('24')
+  })
+
+  it('已登录收藏成功后收藏数即时 +1（可选字段存在时）', async () => {
+    useAuthStore.setState({ user: FIXTURE_USER })
+    renderAt('/repo/2')
+    await screen.findByText('tinyfetch')
+    await userEvent.click(screen.getByRole('button', { name: '收藏' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: '收藏' })).toHaveTextContent('6'))
+  })
+
+  it('自述文件在文件预览之后、讨论区之前', async () => {
+    const { container } = renderAt('/repo/1')
+    await screen.findAllByText('README.md')
+    const readme = container.querySelector('.readme-section')
+    const discuss = container.querySelector('.repo-discussions')
+    expect(readme).toBeTruthy()
+    expect(discuss).toBeTruthy()
+    expect(readme!.compareDocumentPosition(discuss!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('?tab=explain 深链直达解读占位', async () => {
+    renderAt('/repo/1?tab=explain')
+    expect(await screen.findByText('解读功能建设中')).toBeInTheDocument()
   })
 })

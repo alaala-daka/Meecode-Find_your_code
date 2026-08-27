@@ -1,10 +1,6 @@
 /* src/pages/RepoPage.css —— 规范 §7.3 */
 .repo-loading { color: var(--text3); padding: 60px 0; text-align: center; }
 .repo-head {
-  display: flex;
-  flex-wrap: wrap; /* 窄屏标题与按钮组换行，防横向溢出 */
-  justify-content: space-between;
-  gap: 24px;
   padding: 24px;
   margin-bottom: 20px;
   background: var(--bg1);
@@ -19,16 +15,12 @@
   text-wrap: balance;
 }
 .repo-tagline { margin-top: 6px; font-size: 15px; color: var(--text2); }
-.repo-meta { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: var(--text3); font-size: 13px; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+.repo-meta { margin-top: 12px; color: var(--text3); font-size: 13px; font-variant-numeric: tabular-nums; }
 .repo-stars { font-family: var(--font-mono); font-weight: 600; color: var(--brand_amber); }
 .repo-lang { display: inline-flex; align-items: center; gap: 5px; }
 .repo-topics { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .repo-head .source-badge { position: static; }
-.repo-head-actions { display: flex; gap: 10px; align-items: flex-start; flex-shrink: 0; }
 .action-error { color: var(--stress_red); font-size: 13px; }
-/* 激活态：收藏=琥珀，点赞=品牌蓝（规范 §6.6） */
-.repo-head-actions .btn-fav.is-on { color: var(--brand_amber); border-color: var(--brand_amber); background: var(--brand_amber_thin); }
-.repo-head-actions .btn-like.is-on { color: var(--brand_blue); border-color: var(--brand_blue); background: var(--brand_blue_thin); }
 
 .repo-tab-body { margin-top: 16px; animation: fade-in 0.15s var(--ease); }
 .repo-files {
@@ -51,7 +43,7 @@
 .explain-title { font-size: 16px; font-weight: 500; color: var(--text2); }
 .explain-sub { font-size: 13px; color: var(--text3); }
 
-/* 窄屏：文件树改上树下码，操作按钮换行 */
+/* 窄屏：文件树改上树下码 */
 @media (max-width: 760px) {
   .repo-files { flex-direction: column; }
   .file-tree {
@@ -60,10 +52,26 @@
     border-right: none;
     border-bottom: 1px solid var(--line_light);
   }
-  .repo-head-actions { flex-wrap: wrap; }
 }
 
 .repo-discussions { margin-top: 24px; padding: 20px 24px; background: var(--bg1); border-radius: var(--radius-lg); }
 .discussions-title { font-size: 16px; font-weight: 500; margin-bottom: 12px; }
 .discussions-body { color: var(--text3); font-size: 13px; }
 .discussions-closed { color: var(--text3); font-size: 13px; }
+
+/* 2026-08-27 五项改进 §3.5：左滚右停双列 */
+.repo-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 24px;
+  align-items: start;
+}
+.repo-main { min-width: 0; }
+.repo-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.repo-meta-actions { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+
+@media (max-width: 1100px) {
+  .repo-grid { grid-template-columns: 1fr; }
+  /* 单列堆叠时右栏取消吸附（.repo-rail-sticky 的 static 化在 RepoRail.css 有对应窄屏规则时可省，此处双保险） */
+  .repo-rail-sticky { position: static; }
+}
