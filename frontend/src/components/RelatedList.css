@@ -1,0 +1,11 @@
+/* src/components/RelatedList.css */
+.related-list-title { font-size: 13px; font-weight: 500; color: var(--text2); letter-spacing: 0.02em; margin-bottom: 12px; }
+.related-list-cards { display: flex; flex-direction: column; gap: 16px; }
+.related-list-empty {
+  background: var(--bg1);
+  border-radius: var(--radius-lg);
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text3);
+  font-size: 13px;
+}
