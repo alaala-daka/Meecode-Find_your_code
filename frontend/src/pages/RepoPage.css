@@ -59,8 +59,8 @@
 .discussions-body { color: var(--text3); font-size: 13px; }
 .discussions-closed { color: var(--text3); font-size: 13px; }
 
-/* 2026-08-27 五项改进 §3.5：左滚右停双列 */
-.repo-grid {
+/* 2026-08-27 五项改进 §3.5：左滚右停双列（repo-page-grid 独立命名，避免覆盖 RepoCard.css 的全局 .repo-grid 五列卡片网格） */
+.repo-page-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
   gap: 24px;
@@ -71,7 +71,7 @@
 .repo-meta-actions { margin-left: auto; display: flex; align-items: center; gap: 14px; }
 
 @media (max-width: 1100px) {
-  .repo-grid { grid-template-columns: 1fr; }
+  .repo-page-grid { grid-template-columns: 1fr; }
   /* 单列堆叠时右栏取消吸附（.repo-rail-sticky 的 static 化在 RepoRail.css 有对应窄屏规则时可省，此处双保险） */
   .repo-rail-sticky { position: static; }
 }

@@ -155,7 +155,7 @@ export default function RepoPage() {
     <>
       <TopBar />
       <main id="main" className="page-shell repo-page">
-        <div className="repo-grid">
+        <div className="repo-page-grid">
           <div className="repo-main">
             <section className="repo-head" style={{ borderTop: `3px solid ${languageColor(detail.language)}` }}>
               <h1 className="repo-name">{detail.title}</h1>
