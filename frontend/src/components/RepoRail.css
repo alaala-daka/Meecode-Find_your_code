@@ -1,0 +1,10 @@
+/* src/components/RepoRail.css —— 左滚右停：右栏内容吸顶固定（§3.5） */
+.repo-rail { min-width: 0; }
+.repo-rail-sticky {
+  position: sticky;
+  top: 80px;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
