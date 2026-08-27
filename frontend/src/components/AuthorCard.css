@@ -1,0 +1,27 @@
+/* src/components/AuthorCard.css */
+.author-card {
+  background: var(--bg1);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.author-card-id { display: flex; align-items: center; gap: 10px; }
+.author-card-avatar {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--brand_blue);
+  color: var(--bg1);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600; font-size: 18px;
+}
+.author-card-name { font-family: var(--font-mono); font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.author-card-btn { width: 100%; justify-content: center; }
+
+/* 窄屏单列堆叠时作者卡转为横向布局（§3.5 断点行为） */
+@media (max-width: 1100px) {
+  .author-card { flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .author-card-id { flex: 1 1 auto; }
+  .author-card-btn { width: auto; flex: 0 1 auto; }
+}
