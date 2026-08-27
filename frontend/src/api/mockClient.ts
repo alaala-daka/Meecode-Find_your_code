@@ -79,7 +79,7 @@ export function createMockClient(): ApiClient {
         owner_login: FIXTURE_USER.login,
         language: 'Python',
         topics: [],
-        stars: 0, views: 0, likes: 0,
+        stars: 0, views: 0, likes: 0, favorites_count: 0,
         source: 'submitted',
         category: payload.category,
         tagline_zh: payload.tagline_zh,
@@ -118,6 +118,7 @@ export function createMockClient(): ApiClient {
       if (on) set.add(repoId); else set.delete(repoId)
       const card = state.repos.find((r) => r.id === repoId)
       if (card && kind === 'like') card.likes += on ? 1 : -1
+      if (card && kind === 'favorite' && card.favorites_count !== undefined) card.favorites_count += on ? 1 : -1
     },
     async myFavorites(): Promise<number[]> {
       return [...state.favorites]

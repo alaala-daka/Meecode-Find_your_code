@@ -41,6 +41,8 @@ describe('theme.css token 契约', () => {
     ['--profile_banner', 'linear-gradient(135deg, #0A4E8A 0%, #15619E 60%, #2E77AE 100%)'],
     ['--on_banner', '#FFFDF8'],
     ['--on_banner_dim', 'rgba(255, 254, 251, 0.72)'],
+    ['--like_pink', '#D84870'],
+    ['--fav_yellow', '#E9A63C'],
   ])('包含 %s: %s', (name, value) => {
     expect(css).toContain(`${name}: ${value}`)
   })

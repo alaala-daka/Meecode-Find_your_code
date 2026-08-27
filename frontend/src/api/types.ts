@@ -18,6 +18,7 @@ export interface RepoCardData {
   tagline_zh: string
   published_at: string       // ISO
   cover_url: string | null
+  favorites_count?: number   // 每仓收藏数；真实后端就绪前后端可缺省，UI 不显数字
 }
 
 export interface RepoDetail extends RepoCardData {

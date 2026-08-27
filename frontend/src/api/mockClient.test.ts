@@ -40,6 +40,14 @@ describe('mockClient', () => {
     await api.interact(2, 'like', true)
     expect((await api.repo(2)).likes).toBe(before + 1)
   })
+  it('interact 收藏切换 favorites_count 计数', async () => {
+    const api = createMockClient()
+    const before = (await api.repo(2)).favorites_count!
+    await api.interact(2, 'favorite', true)
+    expect((await api.repo(2)).favorites_count).toBe(before + 1)
+    await api.interact(2, 'favorite', false)
+    expect((await api.repo(2)).favorites_count).toBe(before)
+  })
   it('delist 后仓库消失', async () => {
     const api = createMockClient()
     await api.delist(1)

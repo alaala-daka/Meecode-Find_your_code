@@ -21,6 +21,9 @@
   --brand_amber_hover: #E5A94F;
   --brand_amber_active: #B87420;
   --brand_amber_thin: #FBF0DC;
+  /* 点赞粉 / 收藏金（2026-08-27 五项改进 §3.4） */
+  --like_pink: #D84870;
+  --fav_yellow: #E9A63C;
   /* 功能色（规范 §3.5） */
   --stress_red: #E0604F;
   --success_green: #4FB477;

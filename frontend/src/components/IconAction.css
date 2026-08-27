@@ -1,0 +1,22 @@
+/* src/components/IconAction.css —— 未点亮=中空粗描边，点亮=实心弹动一次 */
+.icon-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 2px;
+  border-radius: var(--radius-md);
+  color: var(--text1);
+  transition: opacity var(--time-fast);
+}
+.icon-action:hover:not(:disabled) { opacity: 0.85; }
+.icon-action.is-busy { opacity: 0.55; }
+
+.icon-action .icon-action-glyph { display: block; }
+.icon-action .icon-action-glyph path { fill: none; stroke: currentColor; }
+
+@keyframes icon-pop { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+.icon-action.is-on .icon-action-glyph { animation: icon-pop var(--time-slow) var(--ease); }
+.icon-action.is-on.kind-like .icon-action-glyph path { fill: var(--like_pink); stroke: none; }
+.icon-action.is-on.kind-favorite .icon-action-glyph path { fill: var(--fav_yellow); stroke: none; }
+
+.icon-action-count { font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; }
