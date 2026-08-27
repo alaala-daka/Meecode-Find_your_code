@@ -10,10 +10,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
-from . import config
+from . import config, gh
 from .agent import prompts
-from .agent.graph import run_elaborate, run_expand, run_rewrite
-from .agent.mock import mock_chat_events
+from .agent.graph import run_elaborate, run_expand, run_repo_topic, run_rewrite
+from .agent.mock import mock_chat_events, mock_repo_context
 from .llm import chat_stream_events
 from .schemas import (
     ChatRequest,
@@ -26,6 +26,9 @@ from .schemas import (
     ExpandRequest,
     ExpandResponse,
     NodePayload,
+    RepoRootRequest,
+    RepoRootResponse,
+    Settings,
 )
 
 app = FastAPI(title="Concept Simplify API", version="0.1.0")
@@ -50,7 +53,7 @@ def health() -> dict:
 @app.post("/api/sessions", response_model=CreateSessionResponse)
 def create_session() -> CreateSessionResponse:
     session_id = uuid.uuid4().hex
-    _sessions[session_id] = {"created_at": time.time()}
+    _sessions[session_id] = {"created_at": time.time(), "repo_context": None}
     return CreateSessionResponse(session_id=session_id)
 
 
@@ -68,6 +71,57 @@ def create_root(req: CreateRootRequest) -> CreateRootResponse:
     return CreateRootResponse(node=node)
 
 
+@app.post("/api/repos/root", response_model=RepoRootResponse)
+def create_repo_root(req: RepoRootRequest) -> RepoRootResponse:
+    """以仓库为根建图:拉取理解包 → 主题陈述 → 自动首层展开。"""
+    _require_session(req.session_id)
+    if config.LLM_MOCK:
+        repo = mock_repo_context(req.full_name.strip().strip("/"))
+    else:
+        try:
+            repo = gh.fetch_repo_context(req.full_name, req.default_branch)
+        except gh.GitHubFetchError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
+    _sessions[req.session_id]["repo_context"] = repo
+
+    try:
+        topic = run_repo_topic(repo["full_name"], repo["description"], repo["readme"], llm=req.llm)
+        children, edges, _refused = run_expand(
+            parent_title=topic,
+            path=[topic],
+            depth=0,
+            settings=Settings(),
+            llm=req.llm,
+            repo_context=repo,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    node = NodePayload(id=uuid.uuid4().hex, title=topic, content=topic, relevance=1.0)
+    edge_by_title = {e.child_title: e for e in edges}
+    child_payloads = [
+        NodePayload(
+            id=uuid.uuid4().hex,
+            title=c.title,
+            content=c.content,
+            node_type=c.node_type,
+            relevance=c.relevance,
+        )
+        for c in children
+    ]
+    edge_payloads = [
+        EdgePayload(
+            id=uuid.uuid4().hex,
+            parent_id=node.id,
+            child_id=p.id,
+            forward=edge_by_title[p.title].forward if p.title in edge_by_title else "",
+            backward=edge_by_title[p.title].backward if p.title in edge_by_title else "",
+        )
+        for p in child_payloads
+    ]
+    return RepoRootResponse(node=node, children=child_payloads, edges=edge_payloads)
+
+
 @app.post("/api/expand", response_model=ExpandResponse)
 def expand(req: ExpandRequest) -> ExpandResponse:
     _require_session(req.session_id)
@@ -78,6 +132,7 @@ def expand(req: ExpandRequest) -> ExpandResponse:
             depth=req.depth,
             settings=req.settings,
             llm=req.llm,
+            repo_context=_sessions[req.session_id].get("repo_context"),
         )
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
@@ -119,7 +174,13 @@ def node_detail(req: DetailRequest) -> DetailResponse:
     """详细展开(双击已展开节点):生成更丰富的 markdown 阐述,不产生新子节点。"""
     _require_session(req.session_id)
     try:
-        detail = run_elaborate(req.node_title, req.path, req.brief, llm=req.llm)
+        detail = run_elaborate(
+            req.node_title,
+            req.path,
+            req.brief,
+            llm=req.llm,
+            repo_context=_sessions[req.session_id].get("repo_context"),
+        )
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     return DetailResponse(node_id=req.node_id, detail=detail)
@@ -152,6 +213,7 @@ def reader_chat(req: ChatRequest) -> StreamingResponse:
             .replace("{path}", " → ".join(req.path) or req.node_title)
             .replace("{detail}", req.detail or "(暂无精读内容)")
         )
+        context += prompts.repo_block(_sessions[req.session_id].get("repo_context"))
         events = chat_stream_events(
             system=prompts.READER_CHAT_SYSTEM,
             messages=[{"role": "user", "content": context}, *history],

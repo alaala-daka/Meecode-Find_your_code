@@ -38,6 +38,7 @@ class AgentState(TypedDict, total=False):
     children: list[ChildSpec]
     edges: list[EdgeDescription]
     refused: Optional[str]
+    repo_context: Optional[dict]
 
 
 # ---------------------------------------------------------------- nodes
@@ -78,7 +79,8 @@ def decompose_node(state: AgentState) -> dict[str, Any]:
             parent_title=state["parent_title"],
             path=" → ".join(state["path"]) or state["parent_title"],
             max_children=settings.max_children,
-        ),
+        )
+        + prompts.repo_block(state.get("repo_context")),
         DecomposeResult,
         llm=state.get("llm"),
     )
@@ -101,7 +103,8 @@ def relate_node(state: AgentState) -> dict[str, Any]:
             parent_title=state["parent_title"],
             path=" → ".join(state["path"]) or state["parent_title"],
             children_titles=titles,
-        ),
+        )
+        + prompts.repo_block(state.get("repo_context")),
         RelateResult,
         llm=state.get("llm"),
     )
@@ -139,14 +142,28 @@ def run_expand(
     depth: int,
     settings: Settings,
     llm: LLMOverride | None = None,
+    repo_context: Optional[dict] = None,
 ) -> tuple[list[ChildSpec], list[EdgeDescription], Optional[str]]:
     state = _expand_graph.invoke(
-        {"parent_title": parent_title, "path": path, "depth": depth, "settings": settings, "llm": llm}
+        {
+            "parent_title": parent_title,
+            "path": path,
+            "depth": depth,
+            "settings": settings,
+            "llm": llm,
+            "repo_context": repo_context,
+        }
     )
     return state.get("children") or [], state.get("edges") or [], state.get("refused")
 
 
-def run_elaborate(node_title: str, path: list[str], brief: str, llm: LLMOverride | None = None) -> str:
+def run_elaborate(
+    node_title: str,
+    path: list[str],
+    brief: str,
+    llm: LLMOverride | None = None,
+    repo_context: Optional[dict] = None,
+) -> str:
     """详细展开:为已展开节点生成更丰富的 markdown 阐述(不产生新子节点)。"""
     if config.LLM_MOCK:
         return mock.mock_elaborate(node_title, path, brief)
@@ -156,11 +173,29 @@ def run_elaborate(node_title: str, path: list[str], brief: str, llm: LLMOverride
             node_title=node_title,
             path=" → ".join(path) or node_title,
             brief=brief or node_title,
-        ),
+        )
+        + prompts.repo_block(repo_context),
         ElaborateResult,
         llm=llm,
     )
     return result.detail.strip()
+
+
+def run_repo_topic(
+    full_name: str, description: str, readme: str, llm: LLMOverride | None = None
+) -> str:
+    """仓库解读根主题:按仓库实情生成"XX 的解读"式名词性陈述。"""
+    if config.LLM_MOCK:
+        return f"{full_name} 仓库的解读"
+    result = chat_json(
+        prompts.REPO_TOPIC_SYSTEM,
+        prompts.REPO_TOPIC_USER.format(
+            full_name=full_name, description=description or "(无)", readme=readme or "(无)"
+        ),
+        RewriteResult,
+        llm=llm,
+    )
+    return result.topic.strip()
 
 
 # rewrite 是单节点小图,放在函数定义之后装配

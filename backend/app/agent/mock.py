@@ -82,3 +82,15 @@ def mock_chat_events(node_title: str, messages: list[dict]) -> Iterator[dict]:
     for i in range(0, len(answer), 12):
         yield {"type": "delta", "text": answer[i : i + 12]}
     yield {"type": "done"}
+
+
+def mock_repo_context(full_name: str) -> dict:
+    """mock 模式的仓库理解包:离线开发/联调用,不触 GitHub。"""
+    return {
+        "full_name": full_name,
+        "default_branch": "main",
+        "description": "演示用仓库:离线 mock 模式",
+        "readme": "# Demo\n这是一个演示仓库,用于离线开发与前端联调。",
+        "tree_text": "README.md\nsrc/\n  main.py\n  agent.py",
+        "languages_text": "Python 100%",
+    }

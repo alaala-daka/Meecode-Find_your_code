@@ -149,3 +149,20 @@ class ChatRequest(BaseModel):
     messages: list[ChatMessage] = Field(default_factory=list)
     llm: Optional[LLMOverride] = None
     tavily_api_key: Optional[str] = None
+
+
+class RepoRootRequest(BaseModel):
+    """以仓库为根建图(觅码仓库解读)。"""
+
+    session_id: str
+    full_name: str = Field(min_length=1, max_length=200, description="owner/repo")
+    default_branch: Optional[str] = None
+    llm: Optional[LLMOverride] = None
+
+
+class RepoRootResponse(BaseModel):
+    """根节点 + 首层子节点 + 双向边(后端已替前端完成首层展开)。"""
+
+    node: NodePayload
+    children: list[NodePayload] = Field(default_factory=list)
+    edges: list[EdgePayload] = Field(default_factory=list)

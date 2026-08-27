@@ -125,3 +125,48 @@ READER_CONTEXT_USER = """当前阅读节点:{node_title}
 已探索路径:{path}
 精读内容:
 {detail}"""
+
+
+# ---------- 仓库解读上下文(觅码迁移新增) ----------
+
+REPO_CONTEXT_BLOCK = """
+
+【仓库上下文】
+这张概念图是对 GitHub 仓库「{full_name}」的解读。
+仓库简介:{description}
+主要语言:{languages_text}
+目录结构概览:
+{tree_text}
+README 摘录:
+{readme}
+
+要求:结合以上仓库实情解释概念——子节点/阐述应指向该仓库实际使用的模块、技术与设计;不要脱离仓库空谈通用知识。
+"""
+
+
+def repo_block(repo: dict | None) -> str:
+    """repo_context 存在时返回追加块,否则空串(通用概念图行为不变)。"""
+    if not repo:
+        return ""
+    return REPO_CONTEXT_BLOCK.format(
+        full_name=repo.get("full_name", ""),
+        description=repo.get("description") or "(无)",
+        languages_text=repo.get("languages_text") or "(未知)",
+        tree_text=repo.get("tree_text") or "(无)",
+        readme=repo.get("readme") or "(无)",
+    )
+
+
+REPO_TOPIC_SYSTEM = """你是仓库解读助手。给定一个 GitHub 仓库的简介与 README 摘录,输出一个简短的名词性陈述短语作为解读图的中心节点标题,形如「XX 仓库的解读」。
+
+规则:
+1. 以主题为核心的名词性陈述,不是疑问句;
+2. 不超过 16 个字;
+3. 只输出 JSON:{"topic": "..."}。
+"""
+
+REPO_TOPIC_USER = """仓库:{full_name}
+简介:{description}
+README 摘录:
+{readme}
+"""
