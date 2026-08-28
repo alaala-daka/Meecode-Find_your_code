@@ -1,17 +1,16 @@
-// src/pages/SubmitPage.tsx —— 规范 §7.4：三步向导
+// src/pages/SubmitPage.tsx —— 三步投稿向导（选仓库 → 编辑推广页 → 发布）；卡片预览即真实 RepoCard
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 import type { RepoCardData } from '../api/types'
 import Button from '../components/Button'
 import LoginModal from '../components/LoginModal'
-import RepoCover from '../components/RepoCover'
+import RepoCard from '../components/RepoCard'
 import TopBar from '../components/TopBar'
 import { useAuthStore } from '../store/authStore'
 // 显式导入所复用样式的定义文件（.cat-pill/.source-badge），避免依赖打包顺序、兼容未来路由级代码分割
 import '../components/CategoryBar.css'
 import '../components/RepoCard.css'
-import submitSuccess from '../assets/submit-success.png'
 import './SubmitPage.css'
 
 const STEPS = ['选仓库', '编辑推广页', '发布']
@@ -167,16 +166,21 @@ export default function SubmitPage() {
             </div>
             <div className="edit-preview">
               <p className="preview-label">卡片预览</p>
-              <RepoCover name={picked.title} language={picked.language} topics={picked.topics} />
-              <p className="preview-title">{picked.title}</p>
-              <p className="preview-tagline">{tagline || '一句话卖点会显示在这里'}</p>
+              <RepoCard
+                data={{ ...picked, tagline_zh: tagline || '一句话卖点会显示在这里' }}
+              />
             </div>
           </section>
         )}
 
         {step === 2 && (
           <section className="submit-done">
-            <img className="done-img" src={submitSuccess} alt="" aria-hidden="true" />
+            <span className="done-mark" aria-hidden="true">
+              <svg viewBox="0 0 40 40" width="44" height="44">
+                <circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" strokeWidth="2.5" />
+                <polyline points="13,20.5 18,25.5 27.5,15.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
             <p className="done-title">已发布，进入首发曝光窗口</p>
             <p className="done-sub">72 小时内你的仓库会获得加权与保底曝光</p>
             <Button onClick={() => navigate(`/user/${user.login}`)}>查看我的主页</Button>

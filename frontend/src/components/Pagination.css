@@ -1,14 +1,34 @@
-/* src/components/Pagination.css */
-.pagination { display: flex; gap: 8px; justify-content: center; margin-top: 32px; }
-.page-item {
-  min-width: 36px; height: 36px;
-  padding: 0 8px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--line_regular);
-  background: var(--bg1);
-  color: var(--text1);
-  transition: background-color var(--time-fast), color var(--time-fast);
+/* src/components/Pagination.css —— 页码：线框方形小件，选中赭红 */
+.pagination {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 36px;
 }
-.page-item:hover { background: var(--brand_blue_thin); }
-.page-item.is-active { background: var(--brand_blue); border-color: var(--brand_blue); color: var(--bg1); }
-.page-ellipsis { align-self: center; color: var(--text3); padding: 0 2px; }
+.page-item {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  transition: color var(--time-fast), border-color var(--time-fast), background-color var(--time-fast);
+}
+.page-item:hover { color: var(--ink); border-color: var(--line-strong); }
+.page-item.is-active {
+  color: var(--brand);
+  font-weight: 600;
+  background: var(--brand-thin);
+  border-color: var(--brand-line);
+}
+.page-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  min-width: 24px;
+  justify-content: center;
+  color: var(--ink-3);
+}

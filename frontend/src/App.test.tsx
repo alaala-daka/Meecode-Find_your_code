@@ -16,8 +16,8 @@ describe('App 路由冒烟', () => {
 
   it('首页渲染顶栏与卡片流', async () => {
     renderAt('/')
-    // 仓库名在封面 SVG 与标题双渲染（同 Task 8 约定）
-    expect((await screen.findAllByText('mini-agent')).length).toBeGreaterThanOrEqual(2)
+    // 无封面卡：仓库名只在标题链接渲染一次
+    expect((await screen.findAllByText('mini-agent')).length).toBeGreaterThanOrEqual(1)
     // 顶栏输入框与按钮共用 aria-label="搜索"，用 textbox 角色精确定位输入框
     expect(screen.getByRole('textbox', { name: '搜索' })).toBeInTheDocument()
   })
@@ -44,7 +44,7 @@ describe('App 路由冒烟', () => {
 
   it('未知路径回首页', async () => {
     renderAt('/no-such-page')
-    expect((await screen.findAllByText('mini-agent')).length).toBeGreaterThanOrEqual(2)
+    expect((await screen.findAllByText('mini-agent')).length).toBeGreaterThanOrEqual(1)
   })
 
   it('提供跳转主内容链接', () => {

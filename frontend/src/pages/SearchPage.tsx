@@ -1,4 +1,4 @@
-// src/pages/SearchPage.tsx —— 规范 §7.2：横向富卡片 + 排序 tab + 分页（sort/page 由 URL 驱动）
+// src/pages/SearchPage.tsx —— 搜索结果：SkillsMP 式横向线条卡（标题高亮 + 来源行 + 卖点 + 元信息 + 分类）+ 排序 tab + 分页
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
@@ -7,12 +7,10 @@ import Capsule from '../components/Capsule'
 import EmptyState from '../components/EmptyState'
 import ErrorBanner from '../components/ErrorBanner'
 import Pagination from '../components/Pagination'
-import RepoCover from '../components/RepoCover'
 import Tabs from '../components/Tabs'
 import TopBar from '../components/TopBar'
 import { languageColor } from '../theme/languageColors'
 import { formatCount, formatTime } from '../utils/format'
-import emptySearch from '../assets/empty-search.png'
 import './SearchPage.css'
 
 const PAGE_SIZE = 8
@@ -114,7 +112,7 @@ export default function SearchPage() {
         {error && <ErrorBanner message={error} onRetry={() => void run()} />}
         {loading && !error && q !== '' && <p className="search-loading">搜索中…</p>}
         {!loading && !error && q !== '' && total === 0 && (
-          <EmptyState title="没有找到相关仓库，换个关键词试试" actionLabel="推广我的仓库" onAction={() => navigate('/submit')} image={emptySearch} />
+          <EmptyState title="没有找到相关仓库，换个关键词试试" actionLabel="推广我的仓库" onAction={() => navigate('/submit')} />
         )}
         {!loading && !error && cards.length > 0 && (
           <ul className="search-list">
@@ -122,17 +120,15 @@ export default function SearchPage() {
               const lang = languageColor(c.language)
               return (
                 <li key={c.id} className="search-card" data-testid={`search-card-${c.id}`}>
-                  <Link className="search-cover" to={`/repo/${c.id}`} aria-label={c.title}>
-                    <RepoCover name={c.title} language={c.language} topics={c.topics} coverUrl={c.cover_url} />
-                  </Link>
                   <div className="search-info">
                     <h3 className="search-title">
                       <Link to={`/repo/${c.id}`}><Highlight text={c.title} kw={q} /></Link>
                     </h3>
+                    <p className="search-path">
+                      <span className="search-owner">{c.owner_login}</span>
+                    </p>
                     <p className="search-tagline">{c.tagline_zh}</p>
                     <p className="search-meta">
-                      <span>{c.owner_login}</span>
-                      <span>· {formatTime(c.published_at)}</span>
                       <span className="search-stars">★ {formatCount(c.stars)}</span>
                       {c.language && (
                         <span className="search-lang">
@@ -140,9 +136,10 @@ export default function SearchPage() {
                           {c.language}
                         </span>
                       )}
+                      <span className="search-date">{formatTime(c.published_at)}</span>
                     </p>
-                    <Capsule label={c.category} bg="var(--brand_blue_thin)" fg="var(--brand_blue)" />
                   </div>
+                  <Capsule label={c.category} bg="var(--brand-thin)" fg="var(--brand)" />
                 </li>
               )
             })}

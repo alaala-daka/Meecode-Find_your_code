@@ -1,21 +1,25 @@
-/* src/styles/base.css —— reset 与全局基调（规范 §4.1） */
+/* src/styles/base.css —— reset 与全局基调（纸面墨线语言） */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  background-color: var(--bg3);
-  color: var(--text1);
+  background-color: var(--paper);
+  color: var(--ink);
   font-family: var(--font-body);
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
 a { color: inherit; text-decoration: none; }
-button { font-family: inherit; cursor: pointer; border: none; background: none; font-size: inherit; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; font-size: inherit; color: inherit; }
 ul, ol { list-style: none; }
+img { display: block; max-width: 100%; }
+
+::selection { background: var(--brand-thin); color: var(--brand-active); }
 
 :focus-visible {
   outline: none;
-  box-shadow: var(--focus_ring);
+  box-shadow: var(--focus-ring);
   border-radius: var(--radius-sm);
 }
 
@@ -25,8 +29,8 @@ ul, ol { list-style: none; }
   left: 16px; top: -48px;
   z-index: 200;
   padding: 10px 16px;
-  background: var(--brand_blue);
-  color: var(--bg1);
+  background: var(--ink);
+  color: var(--surface);
   border-radius: var(--radius-md);
   transition: top var(--time-fast);
 }
@@ -53,7 +57,7 @@ button, a, [role="button"], input, textarea, select {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* 全站共用的淡入关键帧（规范 §4.5 大面积淡入 .3s） */
+/* 全站共用的淡入关键帧（页面级内容切换 .2s） */
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
 /* 动效克制：尊重系统「减少动态效果」偏好（入场/微光/缩放一律静止） */

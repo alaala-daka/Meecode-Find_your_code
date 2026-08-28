@@ -1,77 +1,40 @@
-/* src/components/RepoCard.css —— 规范 §6.4：默认无阴影无上浮；悬停标题变蓝 + 遮罩淡入 + 封面微缩放（§4.5） */
-/* 流式网格（§5）：常规桌面即五列，窄屏逐级降列，避免大留空 */
+/* src/components/RepoCard.css —— 线框卡片网格（§5）：白底 + 发丝线，静置无影、悬停微升；
+   网格随断点 1/2/3/4 列，文本卡在 1280 壳宽下四列即舒适阅读宽度 */
 .repo-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--grid-gap);
 }
 @media (min-width: 480px) { .repo-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 720px) { .repo-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 1000px) { .repo-grid { grid-template-columns: repeat(4, 1fr); } }
-@media (min-width: 1280px) { .repo-grid { grid-template-columns: repeat(5, 1fr); } }
+@media (min-width: 760px) { .repo-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1040px) { .repo-grid { grid-template-columns: repeat(4, 1fr); } }
 
-.repo-card { display: flex; flex-direction: column; gap: 8px; }
-.repo-card-cover {
-  position: relative;
-  display: block;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-.repo-card-cover .repo-cover {
-  border-radius: 0; /* 由外层裁切 */
-  transition: transform var(--time-fast) var(--ease);
-}
-.repo-card-cover:hover .repo-cover { transform: scale(1.03); }
-
-.source-badge {
-  position: absolute;
-  top: 8px; right: 8px;
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-  line-height: 18px;
-}
-.badge-submitted { background: var(--brand_amber); color: var(--bg1); }
-.badge-crawled { background: var(--brand_blue_thin); color: var(--brand_blue); }
-
-.star-pill {
-  position: absolute;
-  left: 8px; bottom: 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--mask_cover);
-  color: var(--bg1);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  transition: opacity var(--time-fast) var(--ease); /* 悬停时淡出，避免与统计遮罩重叠 */
-}
-.star-icon { color: var(--brand_amber); }
-.lang-dot { width: 8px; height: 8px; border-radius: 50%; }
-
-.hover-mask {
-  position: absolute;
-  inset: 0;
+.repo-card {
   display: flex;
-  align-items: flex-end;
-  gap: 16px;
-  padding: 10px 12px;
-  background: linear-gradient(transparent, var(--mask_cover));
-  color: var(--bg1);
-  font-size: 13px;
-  opacity: 0;
-  transition: opacity var(--time-slow) var(--ease);
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 16px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--time-fast), box-shadow var(--time-fast), transform var(--time-fast);
 }
-/* 悬停或键盘聚焦（触屏 tap 聚焦）时：常驻胶囊淡出、统计遮罩淡入，互斥避免重叠 */
-.repo-card-cover:hover .hover-mask,
-.repo-card-cover:focus-within .hover-mask { opacity: 1; }
-.repo-card-cover:hover .star-pill,
-.repo-card-cover:focus-within .star-pill { opacity: 0; }
+.repo-card:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-1px);
+}
+
+.repo-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
 
 /* 仓库名即代码：等宽字型承载，是全站身份的一部分 */
 .repo-card-title {
+  min-width: 0;
   font-family: var(--font-mono);
   font-size: 15px;
   line-height: 22px;
@@ -80,21 +43,50 @@
 }
 .repo-card-title a {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
   overflow-wrap: anywhere;
   transition: color var(--time-fast);
 }
-.repo-card-title a:hover { color: var(--brand_blue); }
+.repo-card-title a:hover { color: var(--brand); }
+
+.source-badge {
+  flex-shrink: 0;
+  padding: 1px 9px;
+  font-size: 11.5px;
+  line-height: 18px;
+  border-radius: var(--radius-pill);
+}
+.badge-submitted { color: var(--brand); background: var(--brand-thin); border: 1px solid var(--brand-line); }
+.badge-crawled { color: var(--ink-2); background: var(--tint); border: 1px solid var(--line); }
 
 .repo-card-tagline {
-  font-size: 13px; line-height: 17px;
-  color: var(--text2);
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--ink-2);
+  min-height: 40px;
 }
-.repo-card-meta { font-size: 13px; color: var(--text3); font-variant-numeric: tabular-nums; }
-.meta-author { transition: color var(--time-fast); }
-.meta-author:hover { color: var(--brand_blue); }
+
+.repo-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.meta-author { overflow: hidden; max-width: 40%; text-overflow: ellipsis; white-space: nowrap; }
+.meta-stars { display: inline-flex; align-items: center; gap: 3px; font-family: var(--font-mono); }
+.star-icon { font-size: 11px; color: var(--ink-3); }
+.lang-dot { width: 8px; height: 8px; border-radius: 50%; }
+.meta-lang { display: inline-flex; align-items: center; gap: 5px; }
+.meta-date { margin-left: auto; font-family: var(--font-mono); }

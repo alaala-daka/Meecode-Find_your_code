@@ -1,68 +1,102 @@
-/* src/styles/theme.css —— 设计规范 §3–§4 全量 token，唯一裸色值出处之一 */
+/* src/styles/theme.css —— 觅码视觉令牌 · 「纸面墨线」语言（参考 skillsmp 简约线条风重设计 2026-08-28）
+   语义：暖纸白底 + 墨色文字 + 单一赭红强调 + 发丝线边框 + 等宽字承载「仓库名即代码」。
+   唯一裸色值出处（旧令牌名在文件尾部以别名保留，explain 等外围模块不受影响）。 */
 :root {
-  /* 背景（2026-08-27 五项改进 §3.3 校准：bg3 杏色加重、bg2 保持层次不倒挂） */
-  --bg1: #FFFEFB;
-  --bg2: #F9EFDB;
-  --bg3: #F4E4C2;
-  /* 文字（规范 §3.2） */
-  --text1: #2F2A22;
-  --text2: #6E6558;
-  --text3: #9C9284;
-  --text4: #C9C0B0;
-  /* 品牌蓝（规范 §3.3） */
-  --brand_blue: #0E61AC;
-  --brand_blue_hover: #3B82C4;
-  --brand_blue_active: #0A4E8A;
-  --brand_blue_disabled: #A8C6E2;
-  --brand_blue_thin: #E8F1FA;
-  --brand_blue_line: #C4D9EC;
-  /* 暖琥珀（规范 §3.4） */
-  --brand_amber: #DA8E2D;
-  --brand_amber_hover: #E5A94F;
-  --brand_amber_active: #B87420;
-  --brand_amber_thin: #FBF0DC;
-  /* 点赞粉 / 收藏金（2026-08-27 五项改进 §3.4） */
-  --like_pink: #D84870;
-  --fav_yellow: #E9A63C;
-  /* 功能色（规范 §3.5） */
-  --stress_red: #E0604F;
-  --success_green: #4FB477;
-  --operate_orange: #F09B3C;
-  --badge_red: #EE6B60;
-  /* 分割线（规范 §3.6） */
-  --line_light: #F1E8D4;
-  --line_regular: #E5DAC2;
-  --line_bold: #CFC2A8;
-  /* 圆角（规范 §4.2） */
+  /* 中性面（§3.1）：纸面 / 白卡 / 浅填充 */
+  --paper: #FAF9F6;
+  --surface: #FFFFFF;
+  --tint: #F3F1EA;
+  --tint-deep: #ECE9E0;
+
+  /* 墨色文字（§3.2） */
+  --ink: #313A45;
+  --ink-2: #5F6874;
+  --ink-3: #9098A3;
+  --ink-4: #C3C8CE;
+
+  /* 赭红强调（§3.3）：唯一品牌 accent，锁全站 */
+  --brand: #AE5139;
+  --brand-hover: #96432C;
+  --brand-active: #7E3822;
+  --brand-disabled: #E3B4A5;
+  --brand-thin: #F8EFEA;
+  --brand-line: #E9D2C7;
+
+  /* 语义色（§3.4）：仅在状态语义处出现，不作装饰 */
+  --like: #C24E6F;
+  --fav: #D9962E;
+  --danger: #C25040;
+  --ok: #4E9B72;
+  --warn: #C98A2D;
+
+  /* 发丝线（§3.5） */
+  --line: #E7E3D8;
+  --line-strong: #D6D1C4;
+
+  /* 圆角（§4.1 规则）：卡片 10 / 控件 8 / 小件 6 / 胶囊全圆 */
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 10px;
   --radius-xl: 14px;
-  /* 阴影（规范 §4.3） */
-  --shadow_float: 0 4px 24px rgba(62, 48, 24, 0.08);
-  --shadow_dropdown: 0 2px 12px rgba(62, 48, 24, 0.06);
-  --focus_ring: 0 0 0 2px #E8F1FA;
-  /* 动效（规范 §4.5） */
-  --time-fast: 0.2s;
-  --time-slow: 0.3s;
+  --radius-pill: 999px;
+
+  /* 阴影（§4.2）：静置无影，悬停极浅投影，色调随纸面 */
+  --shadow-hover: 0 2px 10px rgba(62, 52, 36, 0.07);
+  --shadow-dropdown: 0 4px 16px rgba(62, 52, 36, 0.08);
+  --focus-ring: 0 0 0 2px var(--brand-thin), 0 0 0 3.5px var(--brand-line);
+
+  /* 动效（§4.3）：克制 */
+  --time-fast: 0.18s;
+  --time-slow: 0.28s;
   --ease: cubic-bezier(0, 0, 0.2, 1);
-  /* 字型（身份层：仓库名即代码，一律等宽；中文正文维持系统无衬线） */
-  --font-body: -apple-system, BlinkMacSystemFont, Helvetica Neue, Helvetica,
-    Arial, PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif;
+
+  /* 字型（身份层）：仓库名/路径/数字一律等宽；中文正文系统无衬线 */
+  --font-body: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica,
+    Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   --font-mono: ui-monospace, "Cascadia Code", "JetBrains Mono", Consolas,
     Menlo, "Liberation Mono", "Courier New", monospace;
-  /* 个人页横幅细纹理（规范 §7.5 实时生成、零图片） */
-  --dot_texture: rgba(255, 254, 251, 0.16);
-  /* 个人页横幅（2026-08-27 五项改进 §3.1：深蓝底白字，延伸覆盖整个头部） */
-  --profile_banner: linear-gradient(135deg, #0A4E8A 0%, #15619E 60%, #2E77AE 100%);
-  --on_banner: #FFFDF8;
-  --on_banner_dim: rgba(255, 254, 251, 0.72);
-  /* 布局（§5 增补）：流式内容区，压缩左右留空，常规桌面即五列 */
-  --shell-max: 1600px;
+
+  /* 布局（§5） */
+  --shell-max: 1280px;
   --shell-pad: 24px;
-  --grid-gap: 20px;
-  /* 遮罩与半透明（规范 §3.7、§6.2、§8.3）——裸色值集中在本文件 */
-  --mask_cover: rgba(43, 32, 16, 0.55);
-  --mask_modal: rgba(43, 32, 16, 0.4);
-  --topbar_bg: rgba(255, 254, 251, 0.85);
+  --grid-gap: 16px;
+  --topbar-h: 64px;
+
+  /* 遮罩 */
+  --mask_modal: rgba(49, 42, 32, 0.44);
+
+  /* ── 旧令牌别名（兼容 explain 等外围引用；新代码请用上方语义令牌） ── */
+  --bg1: var(--surface);
+  --bg2: var(--tint);
+  --bg3: var(--paper);
+  --text1: var(--ink);
+  --text2: var(--ink-2);
+  --text3: var(--ink-3);
+  --text4: var(--ink-4);
+  --brand_blue: var(--brand);
+  --brand_blue_hover: var(--brand-hover);
+  --brand_blue_active: var(--brand-active);
+  --brand_blue_disabled: var(--brand-disabled);
+  --brand_blue_thin: var(--brand-thin);
+  --brand_blue_line: var(--brand-line);
+  --brand_amber: var(--fav);
+  --brand_amber_hover: var(--warn);
+  --brand_amber_active: var(--brand-active);
+  --brand_amber_thin: var(--brand-thin);
+  --like_pink: var(--like);
+  --fav_yellow: var(--fav);
+  --stress_red: var(--danger);
+  --success_green: var(--ok);
+  --operate_orange: var(--warn);
+  --badge_red: var(--danger);
+  --line_light: var(--line);
+  --line_regular: var(--line);
+  --line_bold: var(--line-strong);
+  --shadow_float: var(--shadow-hover);
+  --mask_cover: var(--mask_modal);
+  --topbar_bg: rgba(255, 255, 255, 0.92);
+  --dot_texture: rgba(255, 255, 255, 0.5);
+  --profile_banner: var(--paper);
+  --on_banner: var(--ink);
+  --on_banner_dim: var(--ink-2);
 }

@@ -1,4 +1,4 @@
-/* src/App.css —— 页面壳：app-root 守底布局（设计文档 §3.2）+ 流式内容区 */
+/* src/App.css —— 页面壳：app-root 守底布局 + 流式内容区（纸面墨线：窄幅双栏栏距） */
 #app-root { display: flex; flex-direction: column; min-height: 100dvh; }
 #app-root main { flex: 1; }
 
@@ -6,5 +6,5 @@
   width: 100%;
   max-width: var(--shell-max);
   margin: 0 auto;
-  padding: 20px var(--shell-pad) 60px;
+  padding: 24px var(--shell-pad) 64px;
 }

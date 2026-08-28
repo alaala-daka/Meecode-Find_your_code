@@ -1,24 +1,34 @@
-/* src/components/Button.css —— 规范 §6.6：高 40px 圆角 8px，三态变色，无涟漪 */
+/* src/components/Button.css —— 控件圆角 8px；主按钮赭红实底，次按钮白底线框，幽灵按钮透明线框 */
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  height: 40px;
-  padding: 0 20px;
+  height: 38px;
+  padding: 0 18px;
+  font-size: 13.5px;
+  font-weight: 600;
   border-radius: var(--radius-md);
-  font-size: 14px;
-  font-weight: 500;
-  transition: background-color var(--time-fast), color var(--time-fast);
+  transition: background-color var(--time-fast), color var(--time-fast), border-color var(--time-fast), transform var(--time-fast);
 }
+.btn:active:not(:disabled) { transform: translateY(1px); }
 .btn:disabled { cursor: not-allowed; }
-.btn-primary { background: var(--brand_blue); color: var(--bg1); }
-.btn-primary:hover:not(:disabled) { background: var(--brand_blue_hover); }
-.btn-primary:active:not(:disabled) { background: var(--brand_blue_active); }
-.btn-primary:disabled { background: var(--brand_blue_disabled); }
-.btn-secondary { background: var(--brand_blue_thin); color: var(--brand_blue); }
-.btn-secondary:hover:not(:disabled) { background: var(--brand_blue_line); }
-.btn-ghost { background: transparent; color: var(--text1); border: 1px solid var(--line_regular); }
-.btn-ghost:hover:not(:disabled) { background: var(--brand_blue_thin); }
+
+.btn-primary { background: var(--brand); color: var(--surface); }
+.btn-primary:hover:not(:disabled) { background: var(--brand-hover); }
+.btn-primary:active:not(:disabled) { background: var(--brand-active); }
+.btn-primary:disabled { background: var(--brand-disabled); }
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+.btn-secondary:hover:not(:disabled) { border-color: var(--line-strong); background: var(--tint); }
+
+.btn-ghost { background: transparent; color: var(--ink-2); }
+.btn-ghost:hover:not(:disabled) { color: var(--ink); background: var(--tint); }
+
 .btn-sm { height: 32px; padding: 0 14px; font-size: 13px; }
 .btn-spinner {
   width: 14px; height: 14px;

@@ -2,7 +2,6 @@
 import { useEffect, useRef } from 'react'
 import { useAuthStore } from '../store/authStore'
 import Button from './Button'
-import loginLogo from '../assets/login-logo.png'
 import './LoginModal.css'
 
 interface Props {
@@ -52,7 +51,14 @@ export default function LoginModal({ open, onClose }: Props) {
         ref={modalRef}
         onClick={(e) => e.stopPropagation()}
       >
-        <img className="login-logo-img" src={loginLogo} alt="" aria-hidden="true" />
+        <span className="login-logo" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="34" height="34">
+            <circle cx="14" cy="14" r="9" fill="none" stroke="currentColor" strokeWidth="2.5" />
+            <line x1="21" y1="21" x2="28" y2="28" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+            <circle cx="14" cy="14" r="2.5" fill="currentColor" />
+          </svg>
+        </span>
+        <p className="login-brand">觅码<span className="login-brand-sub">Meecode</span></p>
         <p className="login-tip" id="login-tip">登录后即可收藏、点赞与推广仓库</p>
         <Button onClick={() => { login(); onClose() }}>用 GitHub 登录</Button>
         <button className="login-close" aria-label="关闭登录弹层" onClick={onClose}>✕</button>

@@ -1,11 +1,22 @@
-/* src/components/Skeleton.css —— 微光扫过 1.2s（规范 §4.5）；.repo-grid 在 RepoCard.css 定义 */
-.card-skeleton { display: flex; flex-direction: column; gap: 8px; }
-.sk-cover { aspect-ratio: 16 / 9; border-radius: var(--radius-lg); }
-.sk-line { height: 14px; border-radius: var(--radius-sm); }
-.sk-line.short { height: 12px; }
-.shimmer {
-  background: linear-gradient(90deg, var(--line_light) 25%, var(--bg2) 50%, var(--line_light) 75%);
+/* src/components/Skeleton.css —— 骨架：线框卡面 + 浅灰微光条 */
+.card-skeleton {
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+.sk-line {
+  height: 14px;
+  margin-bottom: 12px;
+  background: linear-gradient(100deg, var(--tint) 40%, var(--tint-deep) 50%, var(--tint) 60%);
   background-size: 200% 100%;
-  animation: shimmer 1.2s infinite;
+  border-radius: var(--radius-sm);
+}
+.sk-line:last-child { margin-bottom: 0; }
+.sk-title { height: 16px; width: 65%; }
+.sk-line.short { width: 40%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .shimmer { animation: shimmer 1.4s linear infinite; }
 }
 @keyframes shimmer { to { background-position: -200% 0; } }

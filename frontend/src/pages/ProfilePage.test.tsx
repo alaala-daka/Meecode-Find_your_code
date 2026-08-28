@@ -56,13 +56,13 @@ describe('ProfilePage', () => {
 
   it('tab 切换到收藏夹显示收藏内容', async () => {
     renderAt('/user/alice?tab=favs')
-    // 仓库名在封面 SVG 与标题双渲染（同 Task 8 约定）
-    expect((await screen.findAllByText('rust-kv')).length).toBeGreaterThanOrEqual(2) // fixture 收藏为 id 3
+    // 无封面卡：仓库名只在标题链接渲染一次（fixture 收藏为 id 3）
+    expect((await screen.findAllByText('rust-kv')).length).toBeGreaterThanOrEqual(1)
   })
 
   it('浏览历史 tab 由 URL 参数驱动', async () => {
     renderAt('/user/alice?tab=history')
-    expect((await screen.findAllByText('tinyfetch')).length).toBeGreaterThanOrEqual(2)
+    expect((await screen.findAllByText('tinyfetch')).length).toBeGreaterThanOrEqual(1)
   })
 
   it('加载失败显示错误条与重试（规范 §8.2）', async () => {

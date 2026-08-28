@@ -1,22 +1,30 @@
-/* src/components/IconAction.css —— 未点亮=中空粗描边，点亮=实心弹动一次 */
+/* src/components/IconAction.css —— 点赞/收藏：细线胶囊按钮，点亮为语义色描边 */
 .icon-action {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 2px;
-  border-radius: var(--radius-md);
-  color: var(--text1);
-  transition: opacity var(--time-fast);
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  color: var(--ink-2);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  font-variant-numeric: tabular-nums;
+  transition: color var(--time-fast), border-color var(--time-fast), background-color var(--time-fast);
 }
-.icon-action:hover:not(:disabled) { opacity: 0.85; }
-.icon-action.is-busy { opacity: 0.55; }
+.icon-action:hover:not(:disabled) { color: var(--ink); border-color: var(--line-strong); }
+.icon-action:disabled { cursor: wait; opacity: 0.6; }
+.icon-action-glyph { flex-shrink: 0; }
+.icon-action-count { font-size: 12.5px; font-family: var(--font-mono); }
 
-.icon-action .icon-action-glyph { display: block; }
-.icon-action .icon-action-glyph path { fill: none; stroke: currentColor; }
+.icon-action.kind-like.is-on { color: var(--like); border-color: color-mix(in srgb, var(--like) 35%, var(--line)); background: color-mix(in srgb, var(--like) 7%, var(--surface)); }
+.icon-action.kind-like.is-on .icon-action-glyph path { stroke: var(--like); }
+.icon-action.kind-favorite.is-on { color: var(--fav); border-color: color-mix(in srgb, var(--fav) 38%, var(--line)); background: color-mix(in srgb, var(--fav) 8%, var(--surface)); }
+.icon-action.kind-favorite.is-on .icon-action-glyph path { stroke: var(--fav); }
 
-@keyframes icon-pop { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
-.icon-action.is-on .icon-action-glyph { animation: icon-pop var(--time-slow) var(--ease); }
-.icon-action.is-on.kind-like .icon-action-glyph path { fill: var(--like_pink); stroke: none; }
-.icon-action.is-on.kind-favorite .icon-action-glyph path { fill: var(--fav_yellow); stroke: none; }
-
-.icon-action-count { font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.icon-action.is-on .icon-action-glyph { animation: pop-on var(--time-slow) var(--ease); }
+@keyframes pop-on {
+  0% { transform: scale(0.8); }
+  55% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}

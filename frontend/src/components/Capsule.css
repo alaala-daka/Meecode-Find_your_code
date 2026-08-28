@@ -1,13 +1,10 @@
-/* src/components/Capsule.css */
+/* src/components/Capsule.css —— 胶囊标签：颜色由调用方以内联变量传入（话题/分类语义色） */
 .capsule {
-  display: inline-block;
-  max-width: 16em; /* 长分类/长 tag 截断，防撑破卡片 */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
   font-size: 12px;
-  line-height: 18px;
-  white-space: nowrap;
-  vertical-align: middle;
+  line-height: 20px;
+  font-family: var(--font-mono);
+  border-radius: var(--radius-pill);
 }

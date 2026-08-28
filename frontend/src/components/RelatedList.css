@@ -1,11 +1,23 @@
-/* src/components/RelatedList.css */
-.related-list-title { font-size: 13px; font-weight: 500; color: var(--text2); letter-spacing: 0.02em; margin-bottom: 12px; }
-.related-list-cards { display: flex; flex-direction: column; gap: 16px; }
-.related-list-empty {
-  background: var(--bg1);
-  border-radius: var(--radius-lg);
-  padding: 24px 16px;
-  text-align: center;
-  color: var(--text3);
-  font-size: 13px;
+/* src/components/RelatedList.css —— 同类推荐：标题 + 迷你线框卡列表（标题 + 箭头 + 卖点 + 日期） */
+.related-list { margin-top: 16px; }
+.related-list-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 12px;
 }
+.related-list-title::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  background: var(--brand);
+  border-radius: 2px;
+}
+.related-list-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.related-list-empty { font-size: 13px; color: var(--ink-3); padding: 8px 0; }

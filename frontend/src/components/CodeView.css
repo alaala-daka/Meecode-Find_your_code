@@ -1,13 +1,25 @@
-/* src/components/CodeView.css */
+/* src/components/CodeView.css —— 代码预览：白底等宽 + 行号栏，悬停行浅灰 */
 .code-view { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .code-head {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 10px 16px;
-  border-bottom: 1px solid var(--line_light);
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
 }
-.code-path { font-size: 13px; font-weight: 500; }
-.code-gh-link { font-size: 12px; color: var(--brand_blue); transition: color var(--time-fast); }
-.code-gh-link:hover { color: var(--brand_blue_hover); }
+.code-path {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.code-gh-link { flex-shrink: 0; font-size: 12px; color: var(--brand); transition: color var(--time-fast); }
+.code-gh-link:hover { color: var(--brand-hover); }
 .code-body { flex: 1; overflow-x: auto; padding: 12px 0; font-size: 13px; line-height: 22px; }
 .code-line {
   display: flex;
@@ -15,12 +27,12 @@
   content-visibility: auto; /* 大文件只渲染视口内行列，加速长文件预览 */
   contain-intrinsic-size: auto 22px;
 }
-.code-line:hover { background: var(--bg2); }
-.code-ln { flex: 0 0 40px; text-align: right; padding-right: 16px; color: var(--text4); user-select: none; }
+.code-line:hover { background: var(--tint); }
+.code-ln { flex: 0 0 40px; text-align: right; padding-right: 16px; color: var(--ink-4); user-select: none; font-variant-numeric: tabular-nums; }
 .code-text { white-space: pre; }
 .code-truncated {
   padding: 8px 16px;
   font-size: 12px;
-  color: var(--text3);
-  border-top: 1px solid var(--line_light);
+  color: var(--ink-3);
+  border-top: 1px solid var(--line);
 }

@@ -1,9 +1,8 @@
-// src/components/TopBar.tsx —— 规范 §6.2、§8.3（未登录触达收藏/投稿/历史先弹登录）
+// src/components/TopBar.tsx —— 纸面墨线顶栏：logo（觅码 + 赭红 Meecode）+ 胶囊导航 + 线框搜索（未登录触达收藏/投稿/历史先弹登录）
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import LoginModal from './LoginModal'
-import historyIcon from '../assets/history-icon.png'
 import './TopBar.css'
 
 export default function TopBar() {
@@ -14,7 +13,7 @@ export default function TopBar() {
   const location = useLocation()
   const user = useAuthStore((s) => s.user)
 
-  // 搜索结果页顶栏保留查询词（规范 §7.2）；其余页不随 URL 回写
+  // 搜索结果页顶栏保留查询词；其余页不随 URL 回写
   useEffect(() => {
     if (location.pathname === '/search') setQ(params.get('q') ?? '')
   }, [location.pathname, params])
@@ -40,15 +39,14 @@ export default function TopBar() {
         <div className="topbar-left">
           <Link className="logo" to="/" aria-label="觅码 首页">
             <span className="logo-mark" aria-hidden="true">
-              <svg viewBox="0 0 32 32" width="32" height="32">
+              <svg viewBox="0 0 32 32" width="26" height="26">
                 <circle cx="14" cy="14" r="9" fill="none" stroke="currentColor" strokeWidth="2.5" />
                 <line x1="21" y1="21" x2="28" y2="28" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
                 <circle cx="14" cy="14" r="2.5" fill="currentColor" />
               </svg>
             </span>
             <span className="logo-text">
-              觅码
-              <span className="logo-sub">Meecode</span>
+              觅码<span className="logo-sub">Meecode</span>
             </span>
           </Link>
           <nav className="topbar-nav">
@@ -60,6 +58,10 @@ export default function TopBar() {
           </nav>
         </div>
         <div className="topbar-search">
+          <svg className="search-glass" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+            <circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+            <line x1="11" y1="11" x2="14" y2="14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
           <input
             className="search-input"
             name="q"
@@ -71,16 +73,14 @@ export default function TopBar() {
             placeholder="搜索仓库、标签、一句话卖点…"
             aria-label="搜索"
           />
-          <button className="search-btn" onClick={submitSearch} aria-label="搜索按钮">
-            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-              <circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" strokeWidth="2" />
-              <line x1="11" y1="11" x2="14" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </button>
+          <button className="search-btn" onClick={submitSearch} aria-label="搜索按钮">搜索</button>
         </div>
         <div className="topbar-right">
           <button className="icon-btn" aria-label="浏览历史" onClick={goHistory}>
-            <img className="icon-img" src={historyIcon} alt="" aria-hidden="true" />
+            <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+              <circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+              <polyline points="10,5.5 10,10 13.5,12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </button>
           <button className="btn btn-primary btn-submit" onClick={goSubmit}>+ 推广我的仓库</button>
           {user ? (

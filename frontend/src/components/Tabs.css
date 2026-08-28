@@ -1,32 +1,33 @@
-/* src/components/Tabs.css —— 激活项蓝字 + 3px 圆角下划线，悬停浅蓝底 */
-.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line_light); }
+/* src/components/Tabs.css —— 下划线式 tab：发丝线轨道 + 赭红短标线（详情页/个人页切换） */
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+}
 .tab {
   position: relative;
-  padding: 10px 16px;
+  padding: 10px 14px;
   font-size: 14px;
-  color: var(--text2);
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  transition: background-color var(--time-fast), color var(--time-fast);
+  color: var(--ink-2);
+  transition: color var(--time-fast);
 }
-.tab:hover { background: var(--brand_blue_thin); }
-.tab.is-active { color: var(--brand_blue); font-weight: 500; }
+.tab:hover { color: var(--ink); }
+.tab.is-active { color: var(--ink); font-weight: 600; }
 .tab.is-active::after {
-  content: '';
+  content: "";
   position: absolute;
-  left: 16px; right: 16px; bottom: 0;
-  height: 3px;
-  border-radius: 3px;
-  background: var(--brand_blue);
+  left: 14px;
+  right: 14px;
+  bottom: -1px;
+  height: 2px;
+  background: var(--brand);
+  border-radius: var(--radius-pill);
 }
 .tab-count {
   margin-left: 6px;
-  padding: 0 6px;
-  display: inline-block;
+  font-size: 12px;
+  color: var(--ink-3);
   font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 16px;
-  border-radius: 999px;
-  background: var(--bg2);
-  color: var(--text3);
+  font-variant-numeric: tabular-nums;
 }
-.tab.is-active .tab-count { background: var(--brand_blue_thin); color: var(--brand_blue); }
+.tab.is-active .tab-count { color: var(--brand); }

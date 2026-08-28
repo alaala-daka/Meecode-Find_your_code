@@ -1,54 +1,64 @@
-/* src/components/CategoryBar.css —— 高 44px 吸顶，胶囊式（规范 §6.3） */
+/* src/components/CategoryBar.css —— 分类胶囊：吸顶于顶栏之下；线框胶囊，选中态赭红细底（SkillsMP 时间筛选样式） */
 .category-bar {
   position: sticky;
-  top: 64px;
+  top: var(--topbar-h);
   z-index: 19;
-  height: 44px;
-  background: var(--topbar_bg);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--line_light);
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
 }
+
 .category-inner {
-  width: 100%;
-  max-width: var(--shell-max);
-  margin: 0 auto;
-  padding: 0 var(--shell-pad);
-  height: 100%;
   display: flex;
   align-items: center;
   gap: 8px;
-  /* 不设 overflow:hidden：会裁掉「更多」下拉菜单；分类为胶囊且 ≤10 项，不会横向溢出 */
+  max-width: var(--shell-max);
+  margin: 0 auto;
+  padding: 10px var(--shell-pad);
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.category-inner::-webkit-scrollbar { display: none; }
+
 .cat-pill {
+  flex-shrink: 0;
   padding: 5px 14px;
-  border-radius: 999px;
-  background: var(--bg2);
-  color: var(--text2);
   font-size: 13px;
-  white-space: nowrap;
-  transition: background-color var(--time-fast), color var(--time-fast);
+  color: var(--ink-2);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  transition: color var(--time-fast), border-color var(--time-fast), background-color var(--time-fast);
 }
-.cat-pill:hover { background: var(--brand_blue_thin); }
-.cat-pill.is-active { background: var(--brand_blue); color: var(--bg1); }
-.cat-more-wrap { position: relative; }
+.cat-pill:hover { color: var(--ink); border-color: var(--line-strong); }
+.cat-pill.is-active {
+  color: var(--brand);
+  font-weight: 600;
+  background: var(--brand-thin);
+  border-color: var(--brand-line);
+}
+
+.cat-more-wrap { position: relative; flex-shrink: 0; }
 .cat-more-menu {
   position: absolute;
-  top: 36px; right: 0;
-  display: flex; flex-direction: column;
+  top: 36px;
+  right: 0;
+  z-index: 5;
   min-width: 140px;
   padding: 6px;
-  background: var(--bg1);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow_dropdown);
-  animation: fade-in var(--time-fast) var(--ease);
+  box-shadow: var(--shadow-dropdown);
 }
 .cat-more-item {
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
+  display: block;
+  width: 100%;
+  padding: 7px 12px;
   text-align: left;
   font-size: 13px;
-  color: var(--text2);
-  transition: background-color var(--time-fast), color var(--time-fast);
+  color: var(--ink-2);
+  border-radius: var(--radius-md);
+  transition: color var(--time-fast), background-color var(--time-fast);
 }
-.cat-more-item:hover { background: var(--brand_blue_thin); }
-.cat-more-item.is-active { color: var(--brand_blue); font-weight: 500; }
+.cat-more-item:hover { color: var(--ink); background: var(--tint); }
+.cat-more-item.is-active { color: var(--brand); font-weight: 600; background: var(--brand-thin); }

@@ -16,7 +16,7 @@ export default function AuthorCard({ ownerLogin, githubUrl }: Props) {
         </span>
         <span className="author-card-name">{ownerLogin}</span>
       </div>
-      <a className="btn btn-primary author-card-btn" href={githubUrl} target="_blank" rel="noreferrer">跳转 GitHub ↗</a>
+      <a className="btn btn-secondary author-card-btn" href={githubUrl} target="_blank" rel="noreferrer">跳转 GitHub ↗</a>
       <Link className="btn btn-ghost author-card-btn" to={`/user/${ownerLogin}`}>浏览创作者其他仓库</Link>
     </section>
   )

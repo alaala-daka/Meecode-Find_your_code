@@ -1,13 +1,13 @@
-/* src/components/EmptyState.css */
+/* src/components/EmptyState.css —— 空态：细线圆环图标 + 一句话 + 行动按钮（去插画化的线条语言） */
 .empty-state {
-  width: 320px;
-  margin: 60px auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
+  padding: 72px 24px;
   text-align: center;
 }
-.empty-icon { color: var(--text4); }
-.empty-illustration { width: 120px; height: 120px; object-fit: contain; }
-.empty-title { color: var(--text3); font-size: 14px; }
+.empty-icon { color: var(--ink-4); }
+.empty-illustration { width: 120px; height: auto; opacity: 0.9; }
+.empty-title { font-size: 14.5px; color: var(--ink-2); }
+.empty-state .btn { margin-top: 2px; }

@@ -1,89 +1,111 @@
-/* src/pages/SubmitPage.css —— 规范 §7.4 */
+/* src/pages/SubmitPage.css —— 三步向导：数字步骤条 + 线框选择行 + 标签在上表单 + 真实卡片预览 */
 .submit-page { display: flex; flex-direction: column; gap: 24px; }
 .submit-login-guard {
-  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
   padding: 80px 0;
 }
-.guard-title { color: var(--text2); }
+.guard-title { color: var(--ink-2); }
 
+/* 步骤条：mono 数字圆点 + 发丝连线，走过的线染赭红 */
 .steps { display: flex; justify-content: center; }
-.step { display: flex; align-items: center; gap: 8px; color: var(--text3); font-size: 13px; }
-/* 步骤连线：走过的那一段染琥珀 */
+.step { display: flex; align-items: center; gap: 8px; color: var(--ink-3); font-size: 13px; }
 .step + .step::before {
   content: '';
   width: 48px;
   height: 1px;
   margin: 0 16px;
-  background: var(--line_regular);
+  background: var(--line-strong);
 }
-.step.is-done + .step::before { background: var(--brand_amber); }
+.step.is-done + .step::before { background: var(--brand); }
 .step-dot {
-  width: 24px; height: 24px;
-  display: flex; align-items: center; justify-content: center;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
-  background: var(--bg2);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
   font-family: var(--font-mono);
   font-size: 12px;
+  color: var(--ink-2);
 }
-.step.is-current { color: var(--brand_blue); font-weight: 500; }
-.step.is-current .step-dot { background: var(--brand_blue); color: var(--bg1); }
-.step.is-done .step-dot { background: var(--brand_amber_thin); color: var(--brand_amber); }
+.step.is-current { color: var(--ink); font-weight: 600; }
+.step.is-current .step-dot { background: var(--brand); border-color: var(--brand); color: var(--surface); }
+.step.is-done { color: var(--ink-2); }
+.step.is-done .step-dot { background: var(--brand-thin); border-color: var(--brand-line); color: var(--brand); }
 
+/* 第一步：仓库选择行 */
 .submit-section { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
 .my-repos { width: 100%; display: flex; flex-direction: column; gap: 8px; }
 .my-repo {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px 16px;
-  background: var(--bg1);
-  border: 1px solid var(--line_regular);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: border-color var(--time-fast), background-color var(--time-fast);
 }
-.my-repo:hover { background: var(--brand_blue_thin); }
-.my-repo.is-picked { border-color: var(--brand_blue); background: var(--brand_blue_thin); }
+.my-repo:hover { border-color: var(--line-strong); background: var(--tint); }
+.my-repo.is-picked { border-color: var(--brand); background: var(--brand-thin); }
+.my-repo input { accent-color: var(--brand); }
 .my-repo-name { flex: 1; font-family: var(--font-mono); font-weight: 600; letter-spacing: -0.01em; overflow-wrap: anywhere; }
-.my-repo-stars { font-family: var(--font-mono); color: var(--brand_amber); font-size: 13px; }
+.my-repo-stars { font-family: var(--font-mono); color: var(--ink-3); font-size: 13px; }
 .my-repo .source-badge { position: static; }
 
+/* 第二步：表单 + 预览 */
 .submit-edit { display: flex; gap: 24px; align-items: flex-start; }
 .edit-form { flex: 1; display: flex; flex-direction: column; gap: 16px; }
 .field { display: flex; flex-direction: column; gap: 6px; }
-.field-label { font-size: 13px; color: var(--text2); }
-.tagline-count { margin-left: 6px; color: var(--text3); font-family: var(--font-mono); font-size: 12px; }
-.action-error { color: var(--stress_red); font-size: 13px; }
+.field-label { font-size: 13px; font-weight: 600; color: var(--ink); }
+.tagline-count { margin-left: 6px; color: var(--ink-3); font-family: var(--font-mono); font-size: 12px; font-weight: 400; }
+.action-error { color: var(--danger); font-size: 13px; }
 .field input, .field textarea {
   padding: 10px 12px;
-  background: var(--bg1);
-  border: 1px solid var(--line_regular);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--radius-md);
   font-family: inherit;
   font-size: 14px;
-  color: var(--text1);
-  transition: box-shadow var(--time-fast), border-color var(--time-fast);
+  color: var(--ink);
+  transition: border-color var(--time-fast);
 }
+.field input::placeholder, .field textarea::placeholder { color: var(--ink-3); }
+.field input:hover, .field textarea:hover { border-color: var(--line-strong); }
 .field input:focus, .field textarea:focus {
   outline: none;
-  border-color: var(--brand_blue);
-  box-shadow: var(--focus_ring);
+  border-color: var(--brand);
 }
 .cat-pills { display: flex; flex-wrap: wrap; gap: 8px; }
-.edit-actions { display: flex; gap: 12px; }
+.edit-actions { display: flex; gap: 12px; margin-top: 4px; }
 .edit-preview {
   flex: 0 0 300px;
   padding: 16px;
-  background: var(--bg1);
-  border-radius: var(--radius-xl);
-  display: flex; flex-direction: column; gap: 8px;
+  background: var(--paper);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
-.preview-label { font-size: 12px; color: var(--text3); }
-.preview-title { font-family: var(--font-mono); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; overflow-wrap: anywhere; text-wrap: balance; }
-.preview-tagline { font-size: 13px; color: var(--text2); }
+.preview-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
 
-.submit-done { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 60px 0; }
-.done-img { width: 160px; height: 160px; object-fit: contain; }
-.done-title { font-size: 18px; font-weight: 500; text-wrap: balance; }
-.done-sub { font-size: 13px; color: var(--text3); }
+/* 第三步：完成态 */
+.submit-done { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 60px 0; }
+.done-mark { display: inline-flex; color: var(--ok); margin-bottom: 6px; }
+.done-title { font-size: 18px; font-weight: 700; }
+.done-sub { font-size: 13px; color: var(--ink-3); margin-bottom: 10px; }
 
 /* 窄屏：编辑表单与预览改纵向堆叠 */
 @media (max-width: 860px) {
