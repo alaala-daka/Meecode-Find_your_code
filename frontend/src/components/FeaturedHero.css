@@ -1,0 +1,120 @@
+/* src/components/FeaturedHero.css —— 「全部」页大推荐卡：2×2 近正方，整卡内容交叉淡入（规范 §4.5） */
+.featured-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg1);
+  border: 1px solid var(--line_light);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  aspect-ratio: 1 / 1; /* 窄屏单列：正方呈现 */
+}
+/* ≥2 列起占 2×2，约四倍常规卡面积；480–720px 大卡独占两行，仍需自持正方 */
+@media (min-width: 480px) {
+  .featured-hero { grid-column: span 2; grid-row: span 2; }
+}
+@media (min-width: 720px) {
+  .featured-hero { aspect-ratio: auto; min-height: 420px; }
+}
+
+.hero-slides { position: relative; flex: 1; min-height: 0; }
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--time-slow) var(--ease), visibility 0s linear var(--time-slow);
+}
+.hero-slide.is-active {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--time-slow) var(--ease);
+}
+
+.hero-cover { position: relative; flex: 1; min-height: 0; display: block; overflow: hidden; }
+.hero-cover .repo-cover {
+  position: absolute;
+  inset: 0;
+  aspect-ratio: auto;
+  border-radius: 0;
+  transition: transform var(--time-fast) var(--ease);
+}
+.hero-cover:hover .repo-cover { transform: scale(1.03); }
+
+.hero-info {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 18px 10px;
+}
+.hero-eyebrow { display: flex; align-items: center; gap: 10px; }
+.hero-flag {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--bg1);
+  background: var(--brand_amber);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+.hero-cat { font-size: 12px; color: var(--text3); }
+.hero-title { font-size: 20px; line-height: 26px; }
+.hero-title a {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: color var(--time-fast);
+}
+.hero-title a:hover { color: var(--brand_blue); }
+.hero-tagline {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--text3);
+  font-variant-numeric: tabular-nums;
+}
+.hero-stars { font-family: var(--font-mono); font-weight: 600; color: var(--brand_amber); }
+.hero-lang { display: inline-flex; align-items: center; gap: 5px; }
+.hero-lang .lang-dot { width: 8px; height: 8px; border-radius: 50%; }
+.hero-author { color: var(--text2); }
+
+/* 圆点指示：活跃点位拉成琥珀短条，与「今日精选」角标同色 */
+.hero-dots {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  padding: 0 18px 12px;
+}
+.hero-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line_bold);
+  transition: width var(--time-fast) var(--ease), background-color var(--time-fast) var(--ease);
+}
+.hero-dot:hover { background: var(--text4); }
+.hero-dot.is-active { width: 18px; background: var(--brand_amber); }

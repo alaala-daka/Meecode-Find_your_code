@@ -1,5 +1,5 @@
 // src/pages/HomePage.test.tsx
-import { act, render, screen } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { FIXTURE_REPOS } from '../api/fixtures'
@@ -17,6 +17,30 @@ describe('HomePage', () => {
     // 仓库名同时出现在封面 SVG 与标题链接中，故用 findAllByText（同 Task 8 约定）
     expect(await screen.findAllByText('mini-agent')).not.toHaveLength(0)
     expect((await screen.findAllByText('tinyfetch')).length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('全部页：大推荐卡轮播圆点与精选去重', async () => {
+    render(<HomePage />, { wrapper: MemoryRouter })
+    await screen.findAllByText('mini-agent')
+    const hero = screen.getByRole('region', { name: '今日精选' })
+    // 首屏投稿仓库 3 个 → 轮播 3 条，圆点可手动切换
+    expect(within(hero).getAllByRole('button', { name: /共 3 条/ })).toHaveLength(3)
+    // rust-kv 只出现在大卡内（封面文字 + 标题 = 2 处），网格不再重复曝光
+    expect(screen.getAllByText('rust-kv')).toHaveLength(2)
+  })
+
+  it('分区页：今日精选横条单一仓库、不轮播', async () => {
+    render(<HomePage />, {
+      wrapper: ({ children }) => (
+        <MemoryRouter initialEntries={['/?cat=AI 与机器学习']}>{children}</MemoryRouter>
+      ),
+    })
+    await screen.findAllByText('mini-agent')
+    const strip = screen.getByRole('region', { name: '今日精选' })
+    expect(within(strip).queryAllByRole('button')).toHaveLength(0)
+    // 分类内两个仓库：精选占一个、网格留一个，各只出现一张卡（封面 + 标题 = 2 处）
+    expect(screen.getAllByText('llm-eval-kit')).toHaveLength(2)
+    expect(screen.getAllByText('mini-agent')).toHaveLength(2)
   })
 
   it('哨兵进视口触发翻页', async () => {

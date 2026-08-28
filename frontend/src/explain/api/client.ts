@@ -1,4 +1,5 @@
-/** 后端 API 客户端(经 vite 代理到 :8000)。 */
+/** 解读后端 API 客户端:真实请求经 vite 代理到 :8100;VITE_USE_MOCK 开启(默认)时切换本地 mock,线下调试用。 */
+import { createMockClient } from "./mockClient";
 
 export interface SettingsDto {
   max_children: number;
@@ -76,7 +77,51 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await resp.json()) as T;
 }
 
-export const api = {
+export interface ExplainApi {
+  createSession(): Promise<{ session_id: string }>;
+  createRoot(sessionId: string, rawInput: string, llm?: LLMOverrideDto): Promise<{ node: NodePayload }>;
+  repoRoot(
+    sessionId: string,
+    payload: { full_name: string; default_branch?: string | null; llm?: LLMOverrideDto },
+  ): Promise<{ node: NodePayload; children: NodePayload[]; edges: EdgePayload[] }>;
+  expand(
+    sessionId: string,
+    payload: {
+      node_id: string;
+      node_title: string;
+      path: string[];
+      depth: number;
+      settings: SettingsDto;
+      llm?: LLMOverrideDto;
+    },
+  ): Promise<ExpandResult>;
+  detail(
+    sessionId: string,
+    payload: {
+      node_id: string;
+      node_title: string;
+      path: string[];
+      brief: string;
+      llm?: LLMOverrideDto;
+    },
+  ): Promise<{ node_id: string; detail: string }>;
+  chatStream(
+    sessionId: string,
+    payload: {
+      node_id: string;
+      node_title: string;
+      path: string[];
+      detail: string;
+      messages: ChatMessageDto[];
+      llm?: LLMOverrideDto;
+      tavily_api_key?: string;
+    },
+    onEvent: (e: ChatEvent) => void,
+  ): Promise<void>;
+}
+
+/** 真实实现(经 vite 代理访问后端)。 */
+export const realApi: ExplainApi = {
   createSession: () => request<{ session_id: string }>("/sessions", { method: "POST" }),
 
   createRoot: (sessionId: string, rawInput: string, llm?: LLMOverrideDto) =>
@@ -187,4 +232,21 @@ export const api = {
     if (buf.trim()) emit(buf.trim());
     if (!sawTerminal) throw new ApiError(0, "回答中断,请重试");
   },
+};
+
+/** VITE_USE_MOCK 在调用时机判定而非模块加载时:测试可用 vi.stubEnv 按用例切换。 */
+function mockEnabled(): boolean {
+  return (import.meta.env.VITE_USE_MOCK ?? "true") !== "false";
+}
+
+const mockApi = createMockClient();
+
+/** 唯一数据入口:按 VITE_USE_MOCK 开关自动选择 mock / 真实客户端。 */
+export const api: ExplainApi = {
+  createSession: (...args) => (mockEnabled() ? mockApi : realApi).createSession(...args),
+  createRoot: (...args) => (mockEnabled() ? mockApi : realApi).createRoot(...args),
+  repoRoot: (...args) => (mockEnabled() ? mockApi : realApi).repoRoot(...args),
+  expand: (...args) => (mockEnabled() ? mockApi : realApi).expand(...args),
+  detail: (...args) => (mockEnabled() ? mockApi : realApi).detail(...args),
+  chatStream: (...args) => (mockEnabled() ? mockApi : realApi).chatStream(...args),
 };

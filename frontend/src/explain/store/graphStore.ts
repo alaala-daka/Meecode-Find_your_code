@@ -5,7 +5,7 @@
  * 这是 d3 可变对象与 React 不可变范式共存的标准做法,避免模拟持有过期引用。
  */
 import { create } from "zustand";
-import type { EdgePayload, NodePayload } from "../api/client";
+import type { EdgePayload, NodePayload } from "../../explain/api/client";
 import { childBaseRadius, computeDisplayRadii, R_SOURCE } from "../graph/sizing";
 import { spawnChildPositions } from "../graph/layout";
 

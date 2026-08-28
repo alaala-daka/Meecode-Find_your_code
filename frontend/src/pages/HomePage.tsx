@@ -1,14 +1,16 @@
-// src/pages/HomePage.tsx —— 规范 §7.1
-import { useEffect, useMemo, useRef } from 'react'
+// src/pages/HomePage.tsx —— 规范 §7.1：「全部」页左上 2×2 轮播大卡；分区页横跨三列「今日精选」
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import CategoryBar from '../components/CategoryBar'
 import EmptyState from '../components/EmptyState'
 import ErrorBanner from '../components/ErrorBanner'
-import FeatureBar from '../components/FeatureBar'
+import FeaturedHero, { HERO_MIN_ROTATE, pickHeroItems } from '../components/FeaturedHero'
+import FeaturedStrip, { pickStripItem } from '../components/FeaturedStrip'
 import RepoCard from '../components/RepoCard'
 import { SkeletonGrid } from '../components/Skeleton'
 import TopBar from '../components/TopBar'
 import { useFeedStore } from '../store/feedStore'
+import type { RepoCardData } from '../api/types'
 import emptyCategory from '../assets/empty-category.png'
 import './HomePage.css'
 
@@ -19,13 +21,27 @@ export default function HomePage() {
   const [params] = useSearchParams()
   const cat = params.get('cat')
 
-  // 头条：当前页 star 最高的仓库，投稿优先（数据给定即确定，不随渲染抖动）
-  const featured = useMemo(() => {
-    if (cards.length === 0) return null
-    const submitted = cards.filter((c) => c.source === 'submitted')
-    const pool = submitted.length > 0 ? submitted : cards
-    return pool.reduce((a, b) => (b.stars > a.stars ? b : a))
-  }, [cards])
+  // 精选只按各分类「首屏数据」锁定一次，避免翻页加载导致轮播内容中途变化
+  const [featured, setFeatured] = useState<RepoCardData[]>([])
+  const featuredFor = useRef<string | null | undefined>(undefined)
+  useEffect(() => {
+    if (cards.length === 0 || featuredFor.current === cat) return
+    featuredFor.current = cat
+    if (cat) {
+      const item = pickStripItem(cards)
+      setFeatured(item ? [item] : [])
+    } else {
+      setFeatured(pickHeroItems(cards))
+    }
+  }, [cards, cat])
+
+  // 精选仓库从普通网格去重，首屏不重复曝光
+  const gridCards = useMemo(() => {
+    if (featured.length === 0) return cards
+    const shown = !cat && featured.length < HERO_MIN_ROTATE ? featured.slice(0, 1) : featured
+    const ids = new Set(shown.map((f) => f.id))
+    return cards.filter((c) => !ids.has(c.id))
+  }, [cards, featured, cat])
 
   useEffect(() => {
     const s = useFeedStore.getState()
@@ -64,9 +80,10 @@ export default function HomePage() {
         )}
         {cards.length > 0 && (
           <>
-            {featured && <FeatureBar data={featured} />}
             <div className="repo-grid feed-enter">
-              {cards.map((c) => <RepoCard key={c.id} data={c} />)}
+              {!cat && featured.length > 0 && <FeaturedHero items={featured} />}
+              {cat && featured.length > 0 && <FeaturedStrip data={featured[0]} />}
+              {gridCards.map((c) => <RepoCard key={c.id} data={c} />)}
             </div>
             {showSentinel && <div ref={sentinelRef} className="feed-sentinel" aria-hidden="true" />}
             {loading && cards.length > 0 && <SkeletonGrid count={5} />}

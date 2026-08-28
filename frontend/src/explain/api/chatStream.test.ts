@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { api, ApiError, type ChatEvent } from "./client";
+import { realApi, ApiError, type ChatEvent } from "./client";
 
 /** 把若干 NDJSON 行按指定切分点拆成 chunk 流(模拟跨包断行) */
 function ndjsonResponse(lines: object[], splitAt: number): Response {
@@ -33,7 +33,7 @@ describe("api.chatStream", () => {
       ),
     );
     const events: ChatEvent[] = [];
-    await api.chatStream("sid", PAYLOAD, (e) => events.push(e));
+    await realApi.chatStream("sid", PAYLOAD, (e) => events.push(e));
     expect(events.map((e) => e.type)).toEqual(["status", "delta", "delta", "done"]);
     expect(events[0]).toEqual({ type: "status", stage: "searching", query: "以太 实验" });
   });
@@ -43,7 +43,7 @@ describe("api.chatStream", () => {
       "fetch",
       vi.fn(async () => new Response(JSON.stringify({ detail: "会话不存在或已过期,请重新开始" }), { status: 404 })),
     );
-    await expect(api.chatStream("bad", PAYLOAD, () => {})).rejects.toThrow("会话不存在或已过期,请重新开始");
+    await expect(realApi.chatStream("bad", PAYLOAD, () => {})).rejects.toThrow("会话不存在或已过期,请重新开始");
   });
 
   it("流结束未见 done/error 终态 → 抛「回答中断」", async () => {
@@ -51,7 +51,7 @@ describe("api.chatStream", () => {
       "fetch",
       vi.fn(async () => ndjsonResponse([{ type: "delta", text: "半句话" }], 5)),
     );
-    await expect(api.chatStream("sid", PAYLOAD, () => {})).rejects.toThrow("回答中断");
+    await expect(realApi.chatStream("sid", PAYLOAD, () => {})).rejects.toThrow("回答中断");
   });
 
   it("回调抛出的错误不应被当作坏行吞掉", async () => {
@@ -60,7 +60,7 @@ describe("api.chatStream", () => {
       vi.fn(async () => ndjsonResponse([{ type: "error", message: "后端异常" }], 3)),
     );
     await expect(
-      api.chatStream("sid", PAYLOAD, (e) => {
+      realApi.chatStream("sid", PAYLOAD, (e) => {
         if (e.type === "error") throw new ApiError(0, e.message);
       }),
     ).rejects.toThrow("后端异常");

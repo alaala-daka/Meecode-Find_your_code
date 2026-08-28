@@ -17,12 +17,17 @@ interface Props {
   node: GNode;
   anchor: { x: number; y: number }; // 屏幕坐标(节点中心)
   masked: boolean;
+  /** 画布容器尺寸(浮层 clamp 基准);缺省退回窗口尺寸 */
+  bounds?: { width: number; height: number };
 }
 
-export function NodeCard({ node, anchor, masked }: Props) {
+export function NodeCard({ node, anchor, masked, bounds }: Props) {
   const setCardNode = useUiStore((s) => s.setCardNode);
   const readerOpen = useReaderStore((s) => s.open);
   const mode = useSessionStore((s) => s.mode);
+
+  const bw = bounds?.width ?? window.innerWidth;
+  const bh = bounds?.height ?? window.innerHeight;
 
   // 卡片放在节点右侧偏上,防飞出视口、防遮挡相邻节点;阅读器打开时让出右侧空间
   const style: React.CSSProperties = {
@@ -30,10 +35,10 @@ export function NodeCard({ node, anchor, masked }: Props) {
       170,
       Math.min(
         anchor.x + node.rShow + 70,
-        window.innerWidth - (readerOpen ? readerWidth() : 0) - 170,
+        bw - (readerOpen ? readerWidth() : 0) - 170,
       ),
     ),
-    top: Math.max(130, Math.min(anchor.y - node.rShow - 40, window.innerHeight - 130)),
+    top: Math.max(130, Math.min(anchor.y - node.rShow - 40, bh - 130)),
   };
 
   return (

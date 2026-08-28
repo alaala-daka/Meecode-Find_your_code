@@ -20,6 +20,7 @@ const { handleNodeDoubleClick, openNodeInReader, openReaderFromTopbar } = await 
 const { useGraphStore } = await import("../store/graphStore");
 const { useReaderStore } = await import("../store/readerStore");
 const { useSessionStore } = await import("../store/sessionStore");
+const { useUiStore } = await import("../store/uiStore");
 
 function seedExpandedNode() {
   const g = useGraphStore.getState();
@@ -45,16 +46,23 @@ describe("详细展开(双击已展开节点)", () => {
     expect(n.childIds).toHaveLength(0); // 不拆新子节点
   });
 
-  it("详细展开完成总是入历史;阅读器打开时切换激活,关闭时不擅自打开", async () => {
+  it("概念展开 → 白框自动关闭,阅读器打开展示(原本关闭也打开)", async () => {
+    useUiStore.getState().setCardNode("n1"); // 白框原本开着
     await handleNodeDoubleClick("n1");
     let st = useReaderStore.getState();
-    expect(st.open).toBe(false);
+    expect(st.open).toBe(true);
+    expect(st.activeNodeId).toBe("n1");
     expect(st.entries).toHaveLength(1);
+    expect(useUiStore.getState().cardNodeId).toBeNull(); // 白框已让位
 
-    useReaderStore.setState({ open: true });
+    // 再次双击(已有 detail):白框同样关闭,阅读器切换激活,不重复调 LLM
+    useUiStore.getState().setCardNode("n1");
     await handleNodeDoubleClick("n1");
     st = useReaderStore.getState();
+    expect(st.open).toBe(true);
     expect(st.activeNodeId).toBe("n1");
+    expect(useUiStore.getState().cardNodeId).toBeNull();
+    expect(api.detail).toHaveBeenCalledOnce();
   });
 
   it("已有 detail 的节点再次双击 → 直接打开阅读器,不重复调 LLM", async () => {
@@ -86,13 +94,15 @@ describe("详细展开(双击已展开节点)", () => {
     expect(api.detail).not.toHaveBeenCalled();
   });
 
-  it("openNodeInReader 在探索模式直接打开已有 detail", async () => {
+  it("openNodeInReader 在探索模式直接打开已有 detail,白框自动关闭", async () => {
     useGraphStore.getState().setDetail("n1", "已有详细内容");
+    useUiStore.getState().setCardNode("n1");
     await openNodeInReader("n1");
     const st = useReaderStore.getState();
     expect(st.open).toBe(true);
     expect(st.activeNodeId).toBe("n1");
     expect(api.detail).not.toHaveBeenCalled();
+    expect(useUiStore.getState().cardNodeId).toBeNull();
   });
 });
 

@@ -2,7 +2,7 @@
  * 三组配置:节点生成 / 阅读器伴读 Agent(各自独立)+ Tavily 搜索密钥。 */
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { LLMOverrideDto } from "../api/client";
+import type { LLMOverrideDto } from "../../explain/api/client";
 
 export interface ModelConfig {
   baseUrl: string;

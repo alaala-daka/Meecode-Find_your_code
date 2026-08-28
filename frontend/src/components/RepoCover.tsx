@@ -12,6 +12,8 @@ interface Props {
   className?: string
   /** 图片来源加载策略：网格折下内容默认 lazy，首屏头条传 eager */
   loading?: 'lazy' | 'eager'
+  /** 容器非 16:9 时裁切填充（推荐大卡 / 精选横条），否则留白适配 */
+  crop?: boolean
 }
 
 // 封面内 topic 胶囊字号：按估算宽度降档（胶囊定宽 138，防文字溢出画布）
@@ -45,9 +47,10 @@ function codeBars(name: string): Bar[] {
   return bars
 }
 
-export default function RepoCover({ name, language, topics, coverUrl, className, loading }: Props) {
+export default function RepoCover({ name, language, topics, coverUrl, className, loading, crop }: Props) {
+  const cropCls = crop ? ' repo-cover--crop' : ''
   if (coverUrl) {
-    return <img className={`repo-cover repo-cover-img ${className ?? ''}`} src={coverUrl} alt={name}
+    return <img className={`repo-cover repo-cover-img${cropCls} ${className ?? ''}`} src={coverUrl} alt={name}
       width={672} height={378} loading={loading ?? 'lazy'} />
   }
   const base = coverBase(language)
@@ -57,7 +60,8 @@ export default function RepoCover({ name, language, topics, coverUrl, className,
   const bars = codeBars(name)
   const mono = { fontFamily: 'var(--font-mono)' }
   return (
-    <svg className={`repo-cover ${className ?? ''}`} viewBox="0 0 672 378" role="img" aria-label={name}>
+    <svg className={`repo-cover${cropCls} ${className ?? ''}`} viewBox="0 0 672 378" role="img" aria-label={name}
+      preserveAspectRatio={crop ? 'xMidYMid slice' : 'xMidYMid meet'}>
       <rect width="672" height="378" fill={base} />
       <text x="48" y={line2 ? 76 : 96} fontSize={line2 ? 38 : 42} fontWeight="600"
         fill={TEXT_ON_COVER} style={mono}>{line1}</text>

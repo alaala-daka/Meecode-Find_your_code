@@ -1,5 +1,6 @@
-/* src/pages/HomePage.css —— 入场动画：头条先行，卡片错落淡入 + 8px 上浮，逐卡 30ms（规范 §4.5） */
-.feature-bar {
+/* src/pages/HomePage.css —— 入场动画：精选卡先行，卡片错落淡入 + 8px 上浮，逐卡 30ms（规范 §4.5） */
+.feed-enter .featured-hero,
+.feed-enter .featured-strip {
   animation: card-enter 0.25s var(--ease) backwards;
 }
 .feed-enter .repo-card {

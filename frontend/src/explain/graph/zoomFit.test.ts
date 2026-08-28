@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ensureVisibleTransform, fitTransform, graphBBox, isBBoxVisible } from "./zoomFit";
+import { clampWorldToViewport, ensureVisibleTransform, fitTransform, graphBBox, isBBoxVisible } from "./zoomFit";
 
 describe("fitTransform", () => {
   const bbox = { x0: -100, y0: -50, x1: 300, y1: 150 }; // 400×200,中心 (100,50)
@@ -53,6 +53,42 @@ describe("ensureVisibleTransform", () => {
     expect(isBBoxVisible(bbox, view.w, view.h, inside, 80)).toBe(true);
     const outside = { x: -1000, y: -1000, k: 1 };
     expect(isBBoxVisible(bbox, view.w, view.h, outside, 80)).toBe(false);
+  });
+});
+
+describe("clampWorldToViewport 拖拽边界夹取", () => {
+  const t = { x: 500, y: 300, k: 1 }; // 世界原点映射到屏幕 (500,300)
+
+  it("视口内的点保持不变", () => {
+    expect(clampWorldToViewport(0, 0, 30, t, 1000, 600, 20)).toEqual({ x: 0, y: 0 });
+  });
+
+  it("越界点被夹回边界(计节点屏幕半径与边距)", () => {
+    const c = clampWorldToViewport(900, 0, 30, t, 1000, 600, 20);
+    // 屏幕 x 夹到 1000-20-30=950 → 世界 x = 950-500 = 450
+    expect(c.x).toBeCloseTo(450, 5);
+    expect(c.y).toBeCloseTo(0, 5);
+  });
+
+  it("四边均被夹取,屏幕圆完整留在可视区内", () => {
+    const c = clampWorldToViewport(-2000, 2000, 40, t, 1000, 600, 20);
+    const sx = t.x + c.x * t.k;
+    const sy = t.y + c.y * t.k;
+    expect(sx).toBeCloseTo(20 + 40, 5); // 左边界 pad + r
+    expect(sy).toBeCloseTo(600 - 20 - 40, 5); // 下边界 viewH - pad - r
+  });
+
+  it("缩放系数参与屏幕↔世界换算", () => {
+    const t2 = { x: 0, y: 0, k: 0.5 };
+    const c = clampWorldToViewport(3000, 0, 40, t2, 1000, 600, 20);
+    // 屏幕半径 = 40*0.5 = 20;屏幕 x = 1500 > 1000-20-20=960 → 夹到 960 → 世界 960/0.5 = 1920
+    expect(c.x).toBeCloseTo(1920, 5);
+  });
+
+  it("视口装不下节点(半径过大)时退回视口中心", () => {
+    const c = clampWorldToViewport(0, 0, 500, t, 200, 200, 20);
+    expect(c.x).toBeCloseTo((100 - 500) / 1, 5); // 屏幕中心 x=100 → 世界 (100-500)
+    expect(c.y).toBeCloseTo((100 - 300) / 1, 5); // 屏幕中心 y=100 → 世界 (100-300)
   });
 });
 

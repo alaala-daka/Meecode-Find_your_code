@@ -53,6 +53,30 @@ export function isBBoxVisible(
 }
 
 /**
+ * 把世界坐标点夹取进当前视口:节点的屏幕圆(半径 r*k)完整留在
+ * [pad, viewW-pad]×[pad, viewH-pad] 内。拖拽时用,防止节点被拖出可视区。
+ * 视口装不下(半径过大)时退回视口中心。
+ */
+export function clampWorldToViewport(
+  x: number,
+  y: number,
+  r: number,
+  t: Transform,
+  viewW: number,
+  viewH: number,
+  pad = 20,
+): { x: number; y: number } {
+  const sr = r * t.k; // 屏幕半径
+  const minX = pad + sr;
+  const maxX = viewW - pad - sr;
+  const minY = pad + sr;
+  const maxY = viewH - pad - sr;
+  const sx = minX > maxX ? viewW / 2 : Math.min(maxX, Math.max(minX, t.x + x * t.k));
+  const sy = minY > maxY ? viewH / 2 : Math.min(maxY, Math.max(minY, t.y + y * t.k));
+  return { x: (sx - t.x) / t.k, y: (sy - t.y) / t.k };
+}
+
+/**
  * 确保某个区域可见:
  * - 已可见则保持当前 transform;
  * - 当前缩放级别可容纳时只做平移,保留用户缩放;

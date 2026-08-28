@@ -9,7 +9,10 @@
   padding-top: 28px;
   padding-bottom: 20px;
 }
-.profile-page { position: relative; margin-top: 24px; }
+/* 规范 §3.1：横幅底边贴 tab 上沿——取消壳层的顶部外边距/内边距，蓝色背景盖至 tab 栏
+ * （双类名提升优先级，避免 App.css 的 .page-shell padding 因引入顺序靠后而覆盖） */
+.page-shell.profile-page { padding-top: 0; }
+.profile-page { position: relative; }
 .profile-head-wrap { display: flex; gap: 20px; align-items: flex-end; }
 .profile-avatar {
   width: 96px; height: 96px;
@@ -49,7 +52,7 @@
 .profile-stats { display: flex; gap: 20px; margin-top: 8px; color: var(--on_banner_dim); font-size: 13px; font-variant-numeric: tabular-nums; }
 .profile-stats b { font-family: var(--font-mono); color: var(--on_banner); font-weight: 600; }
 
-.profile-page .tabs { position: sticky; top: 64px; z-index: 18; margin-top: 24px; background: var(--bg3); }
+.profile-page .tabs { position: sticky; top: 64px; z-index: 18; background: var(--bg3); }
 .profile-tab-body { margin-top: 20px; animation: fade-in 0.15s var(--ease); }
 .profile-card-wrap { display: flex; flex-direction: column; gap: 6px; }
 .delist-btn {

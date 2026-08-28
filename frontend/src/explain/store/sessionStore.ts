@@ -1,6 +1,6 @@
 /** 会话状态:设置区配置、探索轨迹(F7)、练习模式(F8)。 */
 import { create } from "zustand";
-import { api } from "../api/client";
+import { api } from "../../explain/api/client";
 
 export interface UserSettings {
   maxChildren: number; // 单次最多展开数(默认 3,范围 2-6)

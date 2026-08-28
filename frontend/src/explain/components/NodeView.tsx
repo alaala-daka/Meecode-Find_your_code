@@ -20,9 +20,13 @@ interface Props {
   masked: boolean; // 练习模式:内容未揭晓(标题仍显示)
   onClick: (id: string) => void;
   onDoubleClick: (id: string) => void;
+  /** 拖拽中的世界坐标夹取:防止节点被拖出可视区 */
+  constrain?: (x: number, y: number, r: number) => { x: number; y: number };
+  /** 松手后回调:画布检查整图,越界节点自动收回 */
+  onDragEnd?: () => void;
 }
 
-export function NodeView({ node, sim, masked, onClick, onDoubleClick }: Props) {
+export function NodeView({ node, sim, masked, onClick, onDoubleClick, constrain, onDragEnd }: Props) {
   const gRef = useRef<SVGGElement>(null);
   const focusId = useGraphStore((s) => s.focusId);
   const [mounted, setMounted] = useState(false);
@@ -47,9 +51,11 @@ export function NodeView({ node, sim, masked, onClick, onDoubleClick }: Props) {
         samples.length = 0;
       })
       .on("drag", (event) => {
-        node.fx = event.x;
-        node.fy = event.y;
-        samples.push({ x: event.x, y: event.y, t: performance.now() });
+        const p = constrain ? constrain(event.x, event.y, node.rShow) : { x: event.x, y: event.y };
+        node.fx = p.x;
+        node.fy = p.y;
+        // 采样夹取后的位置:顶住边界时该方向速度自然归零,松手不会甩出界
+        samples.push({ x: p.x, y: p.y, t: performance.now() });
         if (samples.length > 12) samples.shift();
       })
       .on("end", () => {
@@ -60,12 +66,13 @@ export function NodeView({ node, sim, masked, onClick, onDoubleClick }: Props) {
         node.vy = v.vy;
         sim.releaseWarm();
         if (v.vx !== 0 || v.vy !== 0) sim.reheat(0.25); // 让速度被积分,随 velocityDecay 减速
+        onDragEnd?.(); // 画布整图检查:相邻节点被挤出边界时自动收回
       });
     select(gRef.current).call(behavior);
     return () => {
       select(gRef.current!).on(".drag", null);
     };
-  }, [node, sim]);
+  }, [node, sim, constrain, onDragEnd]);
 
   const isFocus = node.id === focusId;
   const r = mounted ? node.rShow : 0.01;

@@ -43,6 +43,7 @@ describe('RepoPage', () => {
   })
 
   it('切换到解读面板，后端不可达时显示错误降级', async () => {
+    vi.stubEnv('VITE_USE_MOCK', 'false') // 强制真实路径,fetch 不可达 → 错误降级
     vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new TypeError('mock: offline'))))
     renderAt('/repo/1')
     await screen.findAllByText('README.md')
@@ -51,6 +52,7 @@ describe('RepoPage', () => {
     expect(screen.getByRole('button', { name: '重试' })).toBeInTheDocument()
     expect(await screen.findByTestId('params')).toHaveTextContent('tab=explain')
     vi.unstubAllGlobals()
+    vi.unstubAllEnvs()
   })
 
   it('未登录点赞触发登录弹层', async () => {
@@ -141,9 +143,11 @@ describe('RepoPage', () => {
   })
 
   it('?tab=explain 深链直达解读面板', async () => {
+    vi.stubEnv('VITE_USE_MOCK', 'false')
     vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new TypeError('mock: offline'))))
     renderAt('/repo/1?tab=explain')
     expect(await screen.findByText('解读服务暂不可用')).toBeInTheDocument()
     vi.unstubAllGlobals()
+    vi.unstubAllEnvs()
   })
 })

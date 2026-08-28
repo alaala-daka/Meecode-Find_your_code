@@ -12,9 +12,11 @@ interface Props {
   parentTitle: string;
   childTitle: string;
   masked: boolean; // 练习模式且子节点未揭晓
+  /** 画布容器尺寸(浮层 clamp 基准);缺省退回窗口尺寸 */
+  bounds?: { width: number; height: number };
 }
 
-export function EdgeBubble({ edge, anchor, parentTitle, childTitle, masked }: Props) {
+export function EdgeBubble({ edge, anchor, parentTitle, childTitle, masked, bounds }: Props) {
   const selectEdge = useUiStore((s) => s.selectEdge);
   const readerOpen = useReaderStore((s) => s.open);
   const ref = useRef<HTMLDivElement>(null);
@@ -27,10 +29,13 @@ export function EdgeBubble({ edge, anchor, parentTitle, childTitle, masked }: Pr
     return () => window.removeEventListener("keydown", onKey);
   }, [selectEdge]);
 
+  const bw = bounds?.width ?? window.innerWidth;
+  const bh = bounds?.height ?? window.innerHeight;
+
   // 防止气泡飞出视口;阅读器打开时让出右侧空间
   const style: React.CSSProperties = {
-    left: Math.max(170, Math.min(anchor.x, window.innerWidth - (readerOpen ? readerWidth() : 0) - 170)),
-    top: Math.max(130, Math.min(anchor.y, window.innerHeight - 130)),
+    left: Math.max(170, Math.min(anchor.x, bw - (readerOpen ? readerWidth() : 0) - 170)),
+    top: Math.max(130, Math.min(anchor.y, bh - 130)),
   };
 
   return (

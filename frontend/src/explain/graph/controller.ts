@@ -1,5 +1,5 @@
 /** 交互控制器:输入提交、节点展开、练习模式点击路由。 */
-import { api, ApiError } from "../api/client";
+import { api, ApiError } from "../../explain/api/client";
 import { pathTitles, useGraphStore } from "../store/graphStore";
 import { useReaderStore } from "../store/readerStore";
 import { useSessionStore } from "../store/sessionStore";
@@ -128,8 +128,8 @@ export function isVisibleInPractice(
   return true;
 }
 
-/** 双击已展开节点 = 详细展开:重新生成更丰富的阐述(不产生新子节点)。
- * 已有 detail → 直接打开阅读器;否则生成后入历史(面板开着则切换激活)。 */
+/** 双击已展开节点 = 详细展开(概念展开):重新生成更丰富的阐述(不产生新子节点)。
+ * 展开结果只由阅读器承载:白框自动关闭、阅读器打开展示,避免同屏重复。 */
 export async function handleNodeDoubleClick(nodeId: string): Promise<void> {
   const session = useSessionStore.getState();
   if (session.mode === "practice") return;
@@ -140,15 +140,18 @@ export async function handleNodeDoubleClick(nodeId: string): Promise<void> {
   if (Date.now() - (expandStartAt.get(nodeId) ?? 0) < 800) return;
   expandStartAt.delete(nodeId); // 窗口已过,清理避免 map 无限增长
 
+  // 概念展开 → 白框立即让位给阅读器
+  useUiStore.getState().setCardNode(null);
+
   const meta = { nodeId: node.id, title: node.title, path: pathTitles(graph.nodes, node.id) };
   if (node.detail) {
     useReaderStore.getState().openWith(meta, node.detail);
     return;
   }
-  await requestDetail(nodeId);
+  await requestDetail(nodeId, true);
 }
 
-/** 详细展开请求主体;openReader=true 时完成后把内容送进阅读器(气泡卡展开图标用)。 */
+/** 详细展开请求主体;openReader=true 时完成后把内容送进阅读器并打开展示(概念展开路径)。 */
 export async function requestDetail(nodeId: string, openReader = false): Promise<void> {
   const graph = useGraphStore.getState();
   const node = graph.nodes[nodeId];
@@ -179,12 +182,13 @@ export async function requestDetail(nodeId: string, openReader = false): Promise
 }
 
 /** 气泡卡展开图标 → 阅读器;无 detail 时先详细展开再打开。
- * 练习模式整体屏蔽详细展开,也禁止通过图标进入阅读器泄露内容。 */
+ * 阅读器接管概念展示,白框自动关闭。练习模式整体屏蔽详细展开,禁止经图标进入阅读器泄露内容。 */
 export async function openNodeInReader(nodeId: string): Promise<void> {
   if (useSessionStore.getState().mode === "practice") return;
 
   const node = useGraphStore.getState().nodes[nodeId];
   if (!node) return;
+  useUiStore.getState().setCardNode(null);
   if (node.detail) {
     useReaderStore
       .getState()
@@ -207,6 +211,7 @@ export async function openReaderFromTopbar(): Promise<void> {
     return;
   }
   if (reader.entries.length > 0) {
+    useUiStore.getState().setCardNode(null); // 阅读器接管展示,白框关闭
     reader.openLatest();
     return;
   }

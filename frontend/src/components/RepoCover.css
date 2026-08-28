@@ -6,3 +6,9 @@
   border-radius: var(--radius-lg);
   object-fit: cover;
 }
+/* 裁切填充：解除 16:9 锁定，由容器给定尺寸，封面铺满（svg 用 slice，img 用 object-fit） */
+.repo-cover--crop {
+  height: 100%;
+  aspect-ratio: auto;
+  border-radius: 0;
+}

@@ -1,7 +1,7 @@
 /** 阅读器状态:精读历史(会话内)+ 伴读问答流式追加。
  * entries 就地更新 + version 计数器驱动重渲染(与 graphStore 同模式)。 */
 import { create } from "zustand";
-import { api, ApiError, type ChatEvent } from "../api/client";
+import { api, ApiError, type ChatEvent } from "../../explain/api/client";
 import { useSessionStore } from "./sessionStore";
 import { toLLMOverride, useSettingsStore } from "./settingsStore";
 import { useUiStore } from "./uiStore";
@@ -42,8 +42,10 @@ interface ReaderState {
   sendQuestion: (text: string) => Promise<void>;
 }
 
-/** 阅读器占位宽度:与 app.css 的 .reader-panel width: min(420px, 38vw) 对应 */
+/** 阅读器占位宽度:与 explain.css 的 .reader-panel width: min(420px, 38vw) 对应;
+ * 窄屏(≤720px)媒体查询下面板全宽。 */
 export function readerWidth(): number {
+  if (window.innerWidth <= 720) return window.innerWidth;
   return Math.min(420, window.innerWidth * 0.38);
 }
 
