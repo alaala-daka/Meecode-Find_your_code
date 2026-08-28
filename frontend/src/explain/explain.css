@@ -133,7 +133,7 @@
   left: auto;
   transform: none;
   width: 320px;
-  max-height: calc(100vh - 128px);
+  max-height: calc(100% - 118px);
   overflow-y: auto;
   z-index: 35;
   animation: settings-in var(--dur-bubble) var(--ease-soft);

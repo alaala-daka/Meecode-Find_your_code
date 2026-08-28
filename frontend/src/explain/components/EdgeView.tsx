@@ -80,7 +80,7 @@ export function EdgeMarkerDefs() {
         markerHeight="7"
         orient="auto"
       >
-        <path d="M 0 1 L 9 5 L 0 9" fill="none" stroke="#fff" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M 0 1 L 9 5 L 0 9" fill="none" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" style={{ stroke: "var(--line_regular)" }} />
       </marker>
       <marker
         id="cs-arrow-start"
@@ -91,7 +91,7 @@ export function EdgeMarkerDefs() {
         markerHeight="7"
         orient="auto-start-reverse"
       >
-        <path d="M 0 1 L 9 5 L 0 9" fill="none" stroke="#fff" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M 0 1 L 9 5 L 0 9" fill="none" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" style={{ stroke: "var(--line_regular)" }} />
       </marker>
     </defs>
   );
