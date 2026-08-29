@@ -3,6 +3,10 @@ dist/
 .claude/
 .superpowers/
 
+# 本地笔记/密钥，不进仓库
+feedback/
+desktop.ini
+
 # backend (Python)
 __pycache__/
 *.pyc
