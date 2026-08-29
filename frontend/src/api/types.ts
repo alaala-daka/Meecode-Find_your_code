@@ -66,6 +66,12 @@ export interface SubmitPayload {
   cover_url: string | null
 }
 
+export interface AiDraftResult {
+  tagline_zh: string
+  intro_zh: string
+  suggested_category: string // AI 根据仓库内容推荐的分类
+}
+
 export interface ApiClient {
   categories(): Promise<string[]>
   feed(category: string | null, page: number): Promise<FeedPage>
@@ -76,7 +82,7 @@ export interface ApiClient {
   related(repoId: number): Promise<RepoCardData[]>
   myRepos(): Promise<RepoCardData[]>
   submitRepo(payload: SubmitPayload): Promise<RepoCardData>
-  aiDraft(repoId: number): Promise<{ tagline_zh: string; intro_zh: string }>
+  aiDraft(repoId: number): Promise<AiDraftResult>
   userProfile(login: string): Promise<UserProfile>
   userRepos(login: string): Promise<RepoCardData[]>
   userFavorites(login: string): Promise<RepoCardData[]>

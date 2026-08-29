@@ -30,6 +30,9 @@ export default function SubmitPage() {
   const [publishing, setPublishing] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [loginOpen, setLoginOpen] = useState(false)
+  const [aiSuggested, setAiSuggested] = useState('')
+  const [customTag, setCustomTag] = useState('')
+  const [customOpen, setCustomOpen] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -55,6 +58,10 @@ export default function SubmitPage() {
       const draft = await api.aiDraft(picked.id)
       setTagline(draft.tagline_zh.slice(0, TAGLINE_MAX))
       setIntro(draft.intro_zh)
+      // 自动推荐分类：选中 AI 建议并打上角标，用户可随时改选
+      setCategory(draft.suggested_category)
+      setAiSuggested(draft.suggested_category)
+      setCustomOpen(false)
     } catch {
       setActionError('AI 生成失败，可先手写，稍后再试')
     } finally {
@@ -150,12 +157,27 @@ export default function SubmitPage() {
               <div className="field" role="group" aria-label="分类">
                 <span className="field-label">分类</span>
                 <div className="cat-pills">
-                  {cats.map((c) => (
+                  {/* 「其他」由自定义分类替代：用户输入任意 tag */}
+                  {cats.filter((c) => c !== '其他').map((c) => (
                     <button key={c} className={`cat-pill ${category === c ? 'is-active' : ''}`}
-                      aria-pressed={category === c} onClick={() => setCategory(c)}>
+                      aria-pressed={category === c}
+                      onClick={() => { setCategory(c); setCustomOpen(false) }}>
                       {c}
+                      {aiSuggested === c && <span className="ai-hint" title="AI 推荐">AI</span>}
                     </button>
                   ))}
+                  <button className={`cat-pill ${customTag.trim() !== '' && category === customTag.trim() ? 'is-active' : ''}`}
+                    aria-pressed={customTag.trim() !== '' && category === customTag.trim()}
+                    onClick={() => setCustomOpen(true)}>
+                    {customTag.trim() || '自定义'}
+                  </button>
+                  {customOpen && (
+                    <input className="cat-custom-input" autoFocus aria-label="自定义分类"
+                      placeholder="输入自定义分类" maxLength={12} value={customTag}
+                      onChange={(e) => { setCustomTag(e.target.value); setCategory(e.target.value.trim()) }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
+                      onBlur={() => setCustomOpen(false)} />
+                  )}
                 </div>
               </div>
               {actionError && <p className="action-error" role="alert">{actionError}</p>}

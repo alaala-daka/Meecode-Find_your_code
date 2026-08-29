@@ -63,6 +63,13 @@ describe('mockClient', () => {
     const api = createMockClient()
     expect(await api.related(11)).toEqual([]) // 其他 分类仅 pixel-sort 自己
   })
+  it('aiDraft 返回基于仓库内容的分类推荐', async () => {
+    const api = createMockClient()
+    // mini-agent：topics agent/llm/runtime → AI 与机器学习
+    expect((await api.aiDraft(1)).suggested_category).toBe('AI 与机器学习')
+    // dot-snap：topics backup/dotfiles → 效率脚本
+    expect((await api.aiDraft(5)).suggested_category).toBe('效率脚本')
+  })
   it('related：仓库不存在 reject', async () => {
     const api = createMockClient()
     await expect(api.related(999)).rejects.toThrow('仓库不存在')

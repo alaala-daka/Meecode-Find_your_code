@@ -3,11 +3,41 @@ import {
   CATEGORIES, FIXTURE_FILES, FIXTURE_REPOS, FIXTURE_TREE, FIXTURE_USER,
 } from './fixtures'
 import type {
-  ApiClient, FeedPage, InteractKind, RepoCardData, RepoDetail,
+  AiDraftResult, ApiClient, FeedPage, InteractKind, RepoCardData, RepoDetail,
   RepoFile, RepoTreeItem, SearchResult, SubmitPayload, UserProfile,
 } from './types'
 
 const PAGE_SIZE = 8
+
+// AI 分类推荐（mock 规则）：按 topics/仓库名/语言命中关键词计分，取最高分分类；真实后端就绪后由 LLM 给出
+const CATEGORY_KEYWORDS: Array<[string, string[]]> = [
+  ['AI 与机器学习', ['ai', 'llm', 'agent', 'gpt', 'ml', 'eval', 'rag', 'model']],
+  ['开发工具', ['git', 'hook', 'cli', 'lint', 'debug', 'markdown', 'slides', 'sdk', 'editor']],
+  ['Web 应用', ['web', 'http', 'fetch', 'blog', 'vitepress', 'server', 'router', 'ui']],
+  ['系统底层', ['kv', 'storage', 'rust', 'wasm', 'os', 'kernel', 'runtime', 'db', 'cache']],
+  ['数据处理', ['csv', 'sql', 'data', 'etl', 'query', 'performance']],
+  ['效率脚本', ['backup', 'dotfiles', 'script', 'shell', 'automation', 'workflow']],
+]
+
+function suggestCategory(card: RepoCardData): string {
+  const tokens = new Set(
+    [card.title, card.language ?? '', ...card.topics]
+      .join(' ')
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter(Boolean),
+  )
+  let best = CATEGORIES[0]
+  let bestScore = 0
+  for (const [cat, keywords] of CATEGORY_KEYWORDS) {
+    const score = keywords.reduce((n, k) => n + (tokens.has(k) ? 1 : 0), 0)
+    if (score > bestScore) {
+      best = cat
+      bestScore = score
+    }
+  }
+  return best
+}
 
 function toDetail(card: RepoCardData): RepoDetail {
   return {
@@ -97,11 +127,12 @@ export function createMockClient(): ApiClient {
       state.repos = [next, ...state.repos]
       return next
     },
-    async aiDraft(repoId): Promise<{ tagline_zh: string; intro_zh: string }> {
+    async aiDraft(repoId): Promise<AiDraftResult> {
       const card = state.repos.find((r) => r.id === repoId)
       return {
         tagline_zh: card ? card.tagline_zh : '一句话卖点（AI 草稿）',
         intro_zh: '这里是 AI 读 README 后生成的介绍草稿，作者可以任意修改。',
+        suggested_category: card ? suggestCategory(card) : CATEGORIES[0],
       }
     },
     async userProfile(login): Promise<UserProfile> {

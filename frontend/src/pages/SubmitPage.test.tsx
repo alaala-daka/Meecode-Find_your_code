@@ -95,4 +95,30 @@ describe('SubmitPage', () => {
     await userEvent.type(input, 'abcde')
     expect(screen.getByText(/5\/40/)).toBeInTheDocument()
   })
+
+  it('AI 草稿后自动选中推荐分类并带角标', async () => {
+    useAuthStore.setState({ user: FIXTURE_USER })
+    renderPage()
+    await userEvent.click((await screen.findAllByLabelText(/mini-agent/))[0])
+    await userEvent.click(screen.getByRole('button', { name: '下一步' }))
+    await userEvent.click(screen.getByRole('button', { name: 'AI 帮我写' }))
+    // mini-agent → 推荐并自动选中「AI 与机器学习」，胶囊上出现 AI 角标
+    await screen.findByText('AI')
+    expect(screen.getByRole('button', { name: /AI 与机器学习/ })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('「其他」替换为可输入的自定义分类', async () => {
+    useAuthStore.setState({ user: FIXTURE_USER })
+    renderPage()
+    await userEvent.click((await screen.findAllByLabelText(/mini-agent/))[0])
+    await userEvent.click(screen.getByRole('button', { name: '下一步' }))
+    expect(screen.queryByRole('button', { name: '其他' })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: '自定义' }))
+    await userEvent.type(screen.getByLabelText('自定义分类'), '游戏与图形')
+    expect(screen.getByRole('button', { name: '游戏与图形' })).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.type(screen.getByLabelText('一句话卖点'), '手写卖点')
+    await userEvent.click(screen.getByRole('button', { name: '发布' }))
+    // 自定义分类可随发布正常提交
+    expect(await screen.findByText('已发布，进入首发曝光窗口')).toBeInTheDocument()
+  })
 })

@@ -83,6 +83,32 @@
   border-color: var(--brand);
 }
 .cat-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+/* AI 推荐角标：附着在被推荐的分类胶囊内侧，mono 小字 + 赭红细线框 */
+.cat-pill .ai-hint {
+  margin-left: 6px;
+  padding: 1px 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--brand);
+  background: var(--surface);
+  border: 1px solid var(--brand-line);
+  border-radius: var(--radius-pill);
+}
+.cat-pill.is-active .ai-hint { background: var(--brand-thin); border-color: var(--brand); }
+/* 自定义分类内联输入：与胶囊同高，选中即赭红描边 */
+.cat-custom-input {
+  width: 150px;
+  padding: 5px 12px;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--brand);
+  border-radius: var(--radius-pill);
+  transition: border-color var(--time-fast);
+}
+.cat-custom-input::placeholder { color: var(--ink-3); }
+.cat-custom-input:focus { outline: none; }
 .edit-actions { display: flex; gap: 12px; margin-top: 4px; }
 .edit-preview {
   flex: 0 0 300px;
