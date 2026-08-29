@@ -32,6 +32,7 @@ vi .env   # 填入 LLM_API_KEY、TAVILY_API_KEY、GITHUB_TOKEN 等（从本地 b
 ## 4. 部署专用 SSH 密钥（deploy）
 
 ```bash
+mkdir -p ~/.ssh && chmod 700 ~/.ssh
 ssh-keygen -t ed25519 -f ~/.ssh/deploy_key -N "" -C "github-actions-deploy"
 cat ~/.ssh/deploy_key.pub >> ~/.ssh/authorized_keys
 chmod 600 ~/.ssh/authorized_keys
@@ -108,6 +109,8 @@ journalctl -u meecode-backend -n 50 --no-pager
 cd /opt/meecode && git fetch origin && git checkout <旧commit-sha>
 backend/.venv/bin/pip install -r backend/requirements.txt
 sudo systemctl restart meecode-backend
+# 重新上线前恢复分支（否则下次部署 git pull --ff-only 失败）
+git checkout feat/frontend-ui && git reset --hard origin/feat/frontend-ui
 # 前端：本地 checkout 旧 commit 构建，rsync 覆盖
 $env:VITE_USE_MOCK='false'; npm run build   # 本机 frontend/
 rsync -az --delete -e "ssh -i <部署私钥>" frontend/dist/ deploy@<服务器IP>:/var/www/meecode/
