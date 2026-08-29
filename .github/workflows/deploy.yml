@@ -1,0 +1,69 @@
+name: deploy
+
+on:
+  push:
+    branches: [feat/frontend-ui]
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+      - '.github/workflows/deploy.yml'
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          VITE_USE_MOCK: 'false'
+        run: npm ci && npm run build
+
+      - name: Setup SSH key
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${SSH_HOST##*@}" >> ~/.ssh/known_hosts
+
+      - name: Upload frontend dist
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          rsync -az --delete -e "ssh -i ~/.ssh/deploy_key" frontend/dist/ "$SSH_HOST:/var/www/meecode/"
+
+      - name: Deploy backend
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          ssh -i ~/.ssh/deploy_key "$SSH_HOST" '
+            set -e
+            cd /opt/meecode
+            git pull --ff-only
+            backend/.venv/bin/pip install -r backend/requirements.txt
+            sudo systemctl restart meecode-backend
+          '
+
+      - name: Health check
+        env:
+          DEPLOY_DOMAIN: ${{ secrets.DEPLOY_DOMAIN }}
+        run: |
+          for i in 1 2 3 4 5; do
+            if curl -fsS "https://${DEPLOY_DOMAIN}/explain-api/health"; then exit 0; fi
+            sleep 5
+          done
+          exit 1
