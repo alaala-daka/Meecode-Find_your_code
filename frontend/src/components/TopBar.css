@@ -1,4 +1,4 @@
-/* src/components/TopBar.css —— 顶栏：白底发丝线分隔，sticky；logo「觅码」+赭红等宽 Meecode；胶囊导航；线框搜索 */
+/* src/components/TopBar.css —— 顶栏：白底发丝线分隔，sticky；logo「觅码」墨色 + 亮橙 Meecode（2026-08 新版字标）；胶囊导航；线框搜索 */
 .topbar {
   position: sticky;
   top: 0;
@@ -21,7 +21,7 @@
 .topbar-left { display: flex; align-items: center; gap: 18px; flex-shrink: 0; }
 
 .logo { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); }
-.logo-mark { display: inline-flex; color: var(--brand); }
+.logo-mark { display: inline-flex; color: var(--logo-accent); }
 .logo-text {
   display: inline-flex;
   align-items: baseline;
@@ -31,11 +31,10 @@
   letter-spacing: 0.01em;
 }
 .logo-sub {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--brand);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--logo-accent);
 }
 
 .topbar-nav { display: flex; align-items: center; gap: 6px; }

@@ -22,6 +22,9 @@
   --brand-thin: #F8EFEA;
   --brand-line: #E9D2C7;
 
+  /* 品牌标志橙（Logo 2026-08 更新）：仅 Logo 图形 / Meecode 字标 / favicon 使用 */
+  --logo-accent: #EE4B22;
+
   /* 语义色（§3.4）：仅在状态语义处出现，不作装饰 */
   --like: #C24E6F;
   --fav: #D9962E;

@@ -20,10 +20,10 @@
   font-weight: 700;
 }
 .footer-sub {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--brand);
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--logo-accent);
 }
 .footer-tag { font-size: 13px; color: var(--ink-3); }
 .footer-cta {

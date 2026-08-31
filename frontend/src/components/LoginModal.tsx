@@ -53,9 +53,10 @@ export default function LoginModal({ open, onClose }: Props) {
       >
         <span className="login-logo" aria-hidden="true">
           <svg viewBox="0 0 32 32" width="34" height="34">
-            <circle cx="14" cy="14" r="9" fill="none" stroke="currentColor" strokeWidth="2.5" />
-            <line x1="21" y1="21" x2="28" y2="28" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-            <circle cx="14" cy="14" r="2.5" fill="currentColor" />
+            <circle cx="13.5" cy="13.5" r="9.75" fill="none" stroke="currentColor" strokeWidth="3.1" />
+            <line x1="21.7" y1="21.7" x2="28.3" y2="28.3" stroke="currentColor" strokeWidth="3.1" strokeLinecap="round" />
+            <circle cx="12.3" cy="14" r="1.75" fill="currentColor" />
+            <line x1="16.7" y1="11.6" x2="16.7" y2="15.8" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
           </svg>
         </span>
         <p className="login-brand">觅码<span className="login-brand-sub">Meecode</span></p>
