@@ -14,9 +14,10 @@ class ScreeningResult(BaseModel):
 
 
 class DraftResult(BaseModel):
-    """「AI 帮我写」草稿：卖点 + 介绍。"""
+    """「AI 帮我写」草稿：卖点 + 介绍 + AI 推荐分类。"""
     tagline_zh: str = ""
     intro_zh: str = ""
+    suggested_category: str = "其他"
 
 
 class UserOut(BaseModel):
@@ -74,18 +75,27 @@ class RepoFileOut(BaseModel):
     content: str
 
 
-class MyRepoOut(BaseModel):
-    """投稿页可勾选的自有仓库。submitted_id 非空表示已在觅码。"""
+class MyGithubRepoOut(BaseModel):
+    """投稿页候选仓库:github_id 即后续 ai-draft/submit 的定位键(status 表达三态徽标)。"""
     github_id: int
     full_name: str
-    language: str = ""
+    title: str
+    language: str | None = None
     stars: int = 0
-    submitted_id: int | None = None
-    status: str = ""
+    status: str = ""  # '' 未投稿 | published | pending_claim
+
+
+class UserProfileOut(BaseModel):
+    login: str
+    avatar_url: str = ""
+    bio: str = ""
+    repo_count: int = 0
+    star_count: int = 0
+    favorite_count: int = 0
 
 
 class SubmitIn(BaseModel):
-    github_id: int
+    full_name: str
     tagline_zh: str = Field(max_length=60)
     intro_zh: str = ""
     category: str = "其他"

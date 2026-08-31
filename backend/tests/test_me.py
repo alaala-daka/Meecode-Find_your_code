@@ -211,3 +211,45 @@ def test_set_interaction_concurrent_no_error(tmp_path):
 
     with ThreadPoolExecutor(max_workers=8) as pool:
         list(pool.map(hit, [True, False] * 8))
+
+
+def test_interaction_ids(client, login, conn):
+    conn.execute("INSERT INTO repos (github_id, full_name, owner_login, source, status)"
+                 " VALUES (1, 'a/b', 'a', 'submitted', 'published')")
+    conn.commit()
+    client.post("/api/interactions", json={"repo_id": 1, "kind": "like", "active": True})
+    client.post("/api/interactions", json={"repo_id": 1, "kind": "favorite", "active": True})
+    assert client.get("/api/me/interaction-ids", params={"kind": "like"}).json() == [1]
+    assert client.get("/api/me/interaction-ids", params={"kind": "favorite"}).json() == [1]
+    assert client.get("/api/me/interaction-ids", params={"kind": "bogus"}).status_code == 422
+
+
+def test_public_profile_and_privacy(client, login, conn):
+    conn.execute("UPDATE users SET bio = '简介' WHERE id = ?", (login,))
+    for i in (1, 2):
+        conn.execute("INSERT INTO repos (github_id, full_name, owner_login, source, status,"
+                     " stars, published_at) VALUES (?, ?, 'demo', 'submitted', 'published', 10, ?)",
+                     (i, f"demo/r{i}", NOW + i))
+    conn.execute("INSERT INTO interactions (user_id, repo_id, kind, updated_at)"
+                 " VALUES (?, 1, 'favorite', 1)", (login,))
+    conn.commit()
+    prof = client.get("/api/users/demo/profile").json()
+    assert prof == {"login": "demo", "avatar_url": "https://a/x", "bio": "简介",
+                    "repo_count": 2, "star_count": 20, "favorite_count": 1}
+    assert len(client.get("/api/users/demo/repos").json()) == 2
+    assert [c["id"] for c in client.get("/api/users/demo/favorites").json()] == [1]
+
+
+def test_history_hidden_from_others(client, login, conn):
+    # users.id 是自增 rowid(不是 github_id):显式给 id=999,下面的 interaction 才满足外键
+    conn.execute("INSERT INTO users (id, github_id, login) VALUES (999, 999, 'other')")
+    conn.execute("INSERT INTO repos (github_id, full_name, owner_login, source, status)"
+                 " VALUES (1, 'o/r', 'other', 'submitted', 'published')")
+    conn.execute("INSERT INTO interactions (user_id, repo_id, kind, updated_at)"
+                 " VALUES (999, 1, 'visit', 1)")
+    conn.commit()
+    # 他人浏览历史一律空列表,不 403(个人页一次 Promise.all 拉全,spec 第 4 节)
+    assert client.get("/api/users/other/history").json() == []
+    # 未见过的用户合成空档案而不是 404(采集仓库作者可能从未登录过觅码)
+    prof = client.get("/api/users/ghost/profile").json()
+    assert prof["login"] == "ghost" and prof["repo_count"] == 0

@@ -20,6 +20,7 @@ from .feed.routes import feed as feed_routes
 from .feed.routes import me as me_routes
 from .feed.routes import repos as repos_routes
 from .feed.routes import submit as submit_routes
+from .feed.routes import users as users_routes
 from .llm import chat_stream_events
 from .schemas import (  # 解读域 schemas,原样
     ChatRequest, CreateRootRequest, CreateRootResponse, CreateSessionResponse,
@@ -55,6 +56,7 @@ app.include_router(feed_routes.router, prefix="/api")
 app.include_router(repos_routes.router, prefix="/api")
 app.include_router(submit_routes.router, prefix="/api")
 app.include_router(me_routes.router, prefix="/api")
+app.include_router(users_routes.router, prefix="/api")
 
 # 会话仅存活于进程内存(构思文档开放问题4默认:仅会话内有效)
 _sessions: dict[str, dict] = {}

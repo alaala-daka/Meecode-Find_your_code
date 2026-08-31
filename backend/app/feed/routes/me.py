@@ -134,6 +134,22 @@ def set_interaction(
     return {"active": body.active}
 
 
+@router.get("/me/interaction-ids", response_model=list[int])
+def interaction_ids(
+    request: Request,
+    kind: str = Query(...),
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> list[int]:
+    """前端拉点赞/收藏 id 列表用于心形/星标回显。"""
+    user = auth.require_user(request, conn)
+    if kind not in ("like", "favorite", "visit"):
+        raise HTTPException(status_code=422, detail="kind 只能是 like/favorite/visit")
+    rows = conn.execute(
+        "SELECT repo_id FROM interactions WHERE user_id = ? AND kind = ?", (user["id"], kind)
+    ).fetchall()
+    return [r["repo_id"] for r in rows]
+
+
 @router.get("/me/repos", response_model=list[RepoCardOut])
 def my_repos(
     request: Request, conn: sqlite3.Connection = Depends(get_conn)
@@ -151,13 +167,14 @@ def my_repos(
 
 
 def _by_kind(conn: sqlite3.Connection, user_id: int, kind: str) -> list[RepoCardOut]:
-    """i.id DESC 是必要的兜底：同一秒内的多次访问 updated_at 相同，
-    只按 updated_at 排序结果不确定，浏览历史顺序会飘。"""
+    """it.id DESC 是必要的兜底：同一秒内的多次访问 updated_at 相同，
+    只按 updated_at 排序结果不确定，浏览历史顺序会飘。
+    外层别名用 it：_card_select 的 like_count 子查询里已有 i，避免遮蔽混淆。"""
     rows = conn.execute(
         _card_select(
-            "FROM interactions i JOIN repos r ON r.id = i.repo_id"
-            " WHERE i.user_id = ? AND i.kind = ? AND r.status != 'delisted'"
-            " ORDER BY i.updated_at DESC, i.id DESC"
+            "FROM interactions it JOIN repos r ON r.id = it.repo_id"
+            " WHERE it.user_id = ? AND it.kind = ? AND r.status != 'delisted'"
+            " ORDER BY it.updated_at DESC, it.id DESC"
         ),
         (user_id, kind),
     ).fetchall()
