@@ -13,9 +13,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ... import config
 from .. import ranking
-from ..cards import to_card
+from ..cards import to_card, _card_select
 from ..deps import get_conn
-from ..schemas import FeedOut
+from ..schemas import FeedOut, SearchOut
 
 router = APIRouter()
 
@@ -31,6 +31,11 @@ def bump_impressions(conn: sqlite3.Connection, repo_ids: list[int]) -> None:
     conn.commit()
 
 
+@router.get("/categories", response_model=list[str])
+def categories() -> list[str]:
+    return list(config.CATEGORIES)
+
+
 @router.get("/feed", response_model=FeedOut)
 def get_feed(
     category: str | None = None,
@@ -42,15 +47,14 @@ def get_feed(
 
     now = int(time.time())
     # pending_claim（未认领的采集仓库）也要展示 —— 只有 delisted 不可见
-    sql = "SELECT * FROM repos WHERE status != 'delisted'"
-    params: list = []
-    if category:
-        sql += " AND category = ?"
-        params.append(category)
-    sql += " ORDER BY published_at DESC LIMIT ?"
+    params: list = [category] if category else []
     params.append(config.FEED_CANDIDATE_LIMIT)
-
-    rows = conn.execute(sql, params).fetchall()
+    rows = conn.execute(
+        _card_select("FROM repos r WHERE r.status != 'delisted'")
+        + (" AND r.category = ?" if category else "")
+        + " ORDER BY r.published_at DESC LIMIT ?",
+        params,
+    ).fetchall()
     ranked = sorted(rows, key=lambda r: ranking.score(r, now), reverse=True)
 
     # 预留位只给窗口内的投稿；其余（含过窗投稿与全部采集）走普通位
@@ -68,42 +72,71 @@ def get_feed(
     start = (page - 1) * size
     slice_ = ordered[start:start + size]
     bump_impressions(conn, [r["id"] for r in slice_])
-    return FeedOut(
-        items=[to_card(r) for r in slice_],
-        page=page,
-        has_more=len(ordered) > start + size,
-    )
+    return FeedOut(cards=[to_card(r) for r in slice_], has_more=len(ordered) > start + size)
 
 
 def _fts_escape(q: str) -> str:
-    """FTS5 有自己的查询语法：AND/OR/NEAR/引号/星号都会被解析。
-    这里只做字面量匹配，故整串加引号并转义内部引号。"""
+    """FTS5 有自己的查询语法:AND/OR/NEAR/引号/星号都会被解析。
+    这里只做字面量匹配,故整串加引号并转义内部引号。"""
     cleaned = re.sub(r'["]', '""', q.strip())
     return f'"{cleaned}"' if cleaned else ""
 
 
-@router.get("/search", response_model=FeedOut)
+def _like_escape(s: str) -> str:
+    return s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
+_SEARCH_ORDER = {
+    "default": "ORDER BY rank",
+    "newest": "ORDER BY r.published_at DESC",
+    "stars": "ORDER BY r.stars DESC",
+}
+
+
+@router.get("/search", response_model=SearchOut)
 def search(
     q: str,
+    sort: str = Query("default"),
     page: int = Query(1, ge=1),
     conn: sqlite3.Connection = Depends(get_conn),
-) -> FeedOut:
-    needle = _fts_escape(q)
-    if not needle:
-        return FeedOut(items=[], page=page, has_more=False)
-
+) -> SearchOut:
+    if sort not in _SEARCH_ORDER:
+        raise HTTPException(status_code=422, detail=f"未知排序:{sort}")
+    term = q.strip()
+    if not term:
+        return SearchOut(cards=[], has_more=False, total=0)
     size = config.FEED_PAGE_SIZE
-    try:
+    offset = (page - 1) * size
+
+    if len(term) < 3:
+        # FTS5 trigram 至少 3 字符:短词("AI"、"图")回退 LIKE,不再静默空结果
+        pat = f"%{_like_escape(term)}%"
+        cond = ("r.status != 'delisted' AND (r.full_name LIKE ? ESCAPE '\\'"
+                " OR r.tagline_zh LIKE ? ESCAPE '\\' OR r.topics LIKE ? ESCAPE '\\')")
+        total = conn.execute(
+            f"SELECT COUNT(*) AS n FROM repos r WHERE {cond}", (pat, pat, pat)
+        ).fetchone()["n"]
+        order = _SEARCH_ORDER[sort] if sort != "default" else "ORDER BY r.published_at DESC"
         rows = conn.execute(
-            "SELECT r.* FROM repos_fts f JOIN repos r ON r.id = f.rowid"
-            " WHERE repos_fts MATCH ? AND r.status != 'delisted'"
-            " ORDER BY rank LIMIT ? OFFSET ?",
-            (needle, size + 1, (page - 1) * size),
+            f"{_card_select('FROM repos r')} WHERE {cond} {order} LIMIT ? OFFSET ?",
+            (pat, pat, pat, size + 1, offset),
         ).fetchall()
-    except sqlite3.OperationalError:
-        return FeedOut(items=[], page=page, has_more=False)  # 语法异常一律空结果
+    else:
+        needle = _fts_escape(term)
+        join = "FROM repos_fts f JOIN repos r ON r.id = f.rowid"
+        cond = "repos_fts MATCH ? AND r.status != 'delisted'"
+        try:
+            total = conn.execute(
+                f"SELECT COUNT(*) AS n {join} WHERE {cond}", (needle,)
+            ).fetchone()["n"]
+            rows = conn.execute(
+                f"{_card_select(join)} WHERE {cond} {_SEARCH_ORDER[sort]} LIMIT ? OFFSET ?",
+                (needle, size + 1, offset),
+            ).fetchall()
+        except sqlite3.OperationalError:
+            return SearchOut(cards=[], has_more=False, total=0)  # 语法异常一律空结果
 
     has_more = len(rows) > size
     rows = rows[:size]
     bump_impressions(conn, [r["id"] for r in rows])
-    return FeedOut(items=[to_card(r) for r in rows], page=page, has_more=has_more)
+    return SearchOut(cards=[to_card(r) for r in rows], has_more=has_more, total=total)

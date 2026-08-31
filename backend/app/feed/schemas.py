@@ -41,10 +41,31 @@ class RepoCard(BaseModel):
     published_at: int = 0
 
 
+class RepoCardOut(BaseModel):
+    """对齐前端 RepoCardData:见 spec 第 4 节映射表。"""
+    id: int
+    full_name: str
+    title: str
+    owner_login: str
+    language: str | None = None
+    topics: list[str] = Field(default_factory=list)
+    stars: int = 0
+    views: int = 0
+    likes: int = 0
+    source: str
+    category: str = "其他"
+    tagline_zh: str = ""
+    published_at: str = ""     # ISO 8601
+    cover_url: str | None = None
+
+
 class FeedOut(BaseModel):
-    items: list[RepoCard]
-    page: int
+    cards: list[RepoCardOut]
     has_more: bool
+
+
+class SearchOut(FeedOut):
+    total: int
 
 
 class RepoDetail(BaseModel):

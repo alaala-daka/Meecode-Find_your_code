@@ -15,9 +15,9 @@ from fastapi.responses import RedirectResponse
 
 from ... import config
 from .. import auth, github
-from ..cards import to_card
+from ..cards import to_card, _card_select
 from ..deps import get_conn
-from ..schemas import BioIn, InteractionIn, RepoCard, UserOut
+from ..schemas import BioIn, InteractionIn, RepoCardOut, UserOut
 
 router = APIRouter()
 
@@ -134,43 +134,47 @@ def set_interaction(
     return {"active": body.active}
 
 
-@router.get("/me/repos", response_model=list[RepoCard])
+@router.get("/me/repos", response_model=list[RepoCardOut])
 def my_repos(
     request: Request, conn: sqlite3.Connection = Depends(get_conn)
-) -> list[RepoCard]:
+) -> list[RepoCardOut]:
     """我的仓库：只展示当前可见/可管理的仓库，已下架的不再出现在个人主页。"""
     user = auth.require_user(request, conn)
     rows = conn.execute(
-        "SELECT * FROM repos WHERE (owner_login = ? OR claimed_by = ?)"
-        " AND status != 'delisted' ORDER BY published_at DESC",
+        _card_select(
+            "FROM repos r WHERE (r.owner_login = ? OR r.claimed_by = ?)"
+            " AND r.status != 'delisted' ORDER BY r.published_at DESC"
+        ),
         (user["login"], user["id"]),
     ).fetchall()
     return [to_card(r) for r in rows]
 
 
-def _by_kind(conn: sqlite3.Connection, user_id: int, kind: str) -> list[RepoCard]:
+def _by_kind(conn: sqlite3.Connection, user_id: int, kind: str) -> list[RepoCardOut]:
     """i.id DESC 是必要的兜底：同一秒内的多次访问 updated_at 相同，
     只按 updated_at 排序结果不确定，浏览历史顺序会飘。"""
     rows = conn.execute(
-        "SELECT r.* FROM interactions i JOIN repos r ON r.id = i.repo_id"
-        " WHERE i.user_id = ? AND i.kind = ? AND r.status != 'delisted'"
-        " ORDER BY i.updated_at DESC, i.id DESC",
+        _card_select(
+            "FROM interactions i JOIN repos r ON r.id = i.repo_id"
+            " WHERE i.user_id = ? AND i.kind = ? AND r.status != 'delisted'"
+            " ORDER BY i.updated_at DESC, i.id DESC"
+        ),
         (user_id, kind),
     ).fetchall()
     return [to_card(r) for r in rows]
 
 
-@router.get("/me/favorites", response_model=list[RepoCard])
+@router.get("/me/favorites", response_model=list[RepoCardOut])
 def my_favorites(
     request: Request, conn: sqlite3.Connection = Depends(get_conn)
-) -> list[RepoCard]:
+) -> list[RepoCardOut]:
     user = auth.require_user(request, conn)
     return _by_kind(conn, user["id"], "favorite")
 
 
-@router.get("/me/history", response_model=list[RepoCard])
+@router.get("/me/history", response_model=list[RepoCardOut])
 def my_history(
     request: Request, conn: sqlite3.Connection = Depends(get_conn)
-) -> list[RepoCard]:
+) -> list[RepoCardOut]:
     user = auth.require_user(request, conn)
     return _by_kind(conn, user["id"], "visit")
