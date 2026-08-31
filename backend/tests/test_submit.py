@@ -230,6 +230,11 @@ def test_cover_url_accepts_https_and_empty():
     assert SubmitIn(full_name="demo/agent-runtime", tagline_zh="x", cover_url="").cover_url == ""
 
 
+def test_cover_url_accepts_null_as_empty():
+    """前端恒发 cover_url=null:必须归一为空串而非 422(后端适配前端类型)。"""
+    assert SubmitIn(full_name="demo/agent-runtime", tagline_zh="x", cover_url=None).cover_url == ""
+
+
 def test_my_github_repos_shape(client, login, conn, monkeypatch):
     monkeypatch.setattr(github, "list_user_repos", lambda login_: [
         {"id": 7, "full_name": "demo/mine", "owner_login": "demo", "language": "Go",
@@ -282,7 +287,7 @@ def test_submit_by_full_name_returns_card(client, login, conn, monkeypatch):
                                                         tagline_zh="t", why_zh="w", quality=4))
     resp = client.post("/api/submit", json={
         "full_name": "demo/mine", "tagline_zh": "卖点", "intro_zh": "介绍",
-        "category": "开发工具", "cover_url": ""})
+        "category": "开发工具", "cover_url": None})  # 前端真实载荷:恒发 null,不得因封面 422
     assert resp.status_code == 200, resp.text
     card = resp.json()
     assert card["full_name"] == "demo/mine" and card["title"] == "mine"

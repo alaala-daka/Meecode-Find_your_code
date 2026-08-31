@@ -36,8 +36,11 @@ export default function SubmitPage() {
 
   useEffect(() => {
     if (!user) return
+    // 真实客户端请求失败会 reject:捕获并经既有 actionError 提示,避免未处理拒绝
     void api.myRepos().then(setRepos)
+      .catch(() => setActionError('我的仓库加载失败'))
     void api.categories().then((cs) => { setCats(cs); setCategory(cs[0]) })
+      .catch(() => setActionError('分类加载失败'))
   }, [user])
 
   // 未保存变更离开提醒（编辑推广页有内容时）

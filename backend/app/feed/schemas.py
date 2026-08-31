@@ -99,12 +99,17 @@ class SubmitIn(BaseModel):
     tagline_zh: str = Field(max_length=60)
     intro_zh: str = ""
     category: str = "其他"
-    cover_url: str = ""
+    cover_url: str | None = ""
 
     @field_validator("cover_url")
     @classmethod
-    def _check_cover_url(cls, v: str) -> str:
-        """封面以 <img src> 直出,不校验就是存储型 XSS/钓鱼向量。"""
+    def _check_cover_url(cls, v: str | None) -> str:
+        """封面以 <img src> 直出,不校验就是存储型 XSS/钓鱼向量。
+
+        None 归一为空串:前端 SubmitPayload.cover_url 恒发 null,后端向既有前端类型看齐。
+        """
+        if v is None:
+            return ""
         v = v.strip()
         if not v:
             return ""
