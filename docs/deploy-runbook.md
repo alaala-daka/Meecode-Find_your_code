@@ -122,3 +122,17 @@ rsync -az --delete -e "ssh -i <部署私钥>" frontend/dist/ deploy@<服务器IP
 - 解读接口 502：`systemctl is-active meecode-backend`；`ss -tlnp | grep 8100` 确认监听。
 - 证书续期失败：`certbot renew --dry-run` 输出；确认 80 端口未被改动、DNS 仍指向本机。
 - 部署后页面仍是旧版：浏览器强刷（dist 文件名带 hash，正常不会缓存错版本）。
+
+## 12. 信息流后端(随 8100 单应用提供)
+
+1. 服务器 `.env` 追加键：`SESSION_SECRET=$(python3 -c "import secrets;print(secrets.token_urlsafe(32))")`、`GITHUB_CLIENT_ID/SECRET`（GitHub → Settings → Developer settings → OAuth Apps → New：callback `https://<domain>/api/auth/callback`）、`GITHUB_TOKEN`（爬取用，无需任何 scope，read public 即可）、`FRONTEND_ORIGIN=https://<domain>`、`GITHUB_MOCK=false`、`LLM_MOCK=false`。
+2. `systemctl restart meecode-backend` 后 `systemctl status` 确认 active；`curl -s https://<domain>/api/health` 返回 `{"ok":true,...}`。
+3. Nginx 按模板更新 `/api` location 并 `nginx -t && systemctl reload nginx`。
+4. cron（`crontab -e`，deploy 用户）：
+
+```cron
+0 3 * * * cd /opt/meecode/backend && .venv/bin/python -m app.feed.jobs.crawl >> /var/log/meecode-crawl.log 2>&1
+0 4 * * * cd /opt/meecode/backend && .venv/bin/python -m app.feed.jobs.report >> /var/log/meecode-report.log 2>&1
+```
+
+5. 冒烟：`curl -s "https://<domain>/api/feed" | head -c 200`（有 DB 内容后返回 cards）；`curl -s "https://<domain>/api/categories"` 返回 8 分类。
