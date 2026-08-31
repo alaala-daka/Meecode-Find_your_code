@@ -114,8 +114,9 @@ describe('SubmitPage', () => {
     await userEvent.click(screen.getByRole('button', { name: '下一步' }))
     expect(screen.queryByRole('button', { name: '其他' })).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: '自定义' }))
-    await userEvent.type(screen.getByLabelText('自定义分类'), '游戏与图形')
-    expect(screen.getByRole('button', { name: '游戏与图形' })).toHaveAttribute('aria-pressed', 'true')
+    // 用不在后端 8 类中的词验证「任意自定义分类」
+    await userEvent.type(screen.getByLabelText('自定义分类'), '硬件创客')
+    expect(screen.getByRole('button', { name: '硬件创客' })).toHaveAttribute('aria-pressed', 'true')
     await userEvent.type(screen.getByLabelText('一句话卖点'), '手写卖点')
     await userEvent.click(screen.getByRole('button', { name: '发布' }))
     // 自定义分类可随发布正常提交

@@ -72,6 +72,15 @@ export interface AiDraftResult {
   suggested_category: string // AI 根据仓库内容推荐的分类
 }
 
+export interface MyGithubRepo {
+  github_id: number
+  full_name: string
+  title: string
+  language: string | null
+  stars: number
+  status: '' | 'published' | 'pending_claim'
+}
+
 export interface ApiClient {
   categories(): Promise<string[]>
   feed(category: string | null, page: number): Promise<FeedPage>
@@ -80,7 +89,7 @@ export interface ApiClient {
   repoTree(id: number): Promise<RepoTreeItem[]>
   repoFile(id: number, path: string): Promise<RepoFile>
   related(repoId: number): Promise<RepoCardData[]>
-  myRepos(): Promise<RepoCardData[]>
+  myRepos(): Promise<MyGithubRepo[]>
   submitRepo(payload: SubmitPayload): Promise<RepoCardData>
   aiDraft(repoId: number): Promise<AiDraftResult>
   userProfile(login: string): Promise<UserProfile>

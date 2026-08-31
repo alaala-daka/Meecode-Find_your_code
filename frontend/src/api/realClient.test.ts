@@ -1,0 +1,59 @@
+// src/api/realClient.test.ts —— 用 stub fetch 验证 URL/方法/凭证与错误透传
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { createRealClient } from './realClient'
+
+function stubFetch(body: unknown, ok = true, status = 200) {
+  // 每次调用返回全新 Response：Response 体只能读一次，同一实例无法供多次请求复用
+  return vi.fn().mockImplementation(() =>
+    new Response(JSON.stringify(body), { status: ok ? 200 : status,
+      headers: { 'Content-Type': 'application/json' } }))
+}
+
+afterEach(() => vi.unstubAllGlobals())
+
+describe('realClient', () => {
+  it('feed 带 category/page 且带凭证', async () => {
+    const f = stubFetch({ cards: [], has_more: false })
+    vi.stubGlobal('fetch', f)
+    await createRealClient().feed('开发工具', 2)
+    expect(f).toHaveBeenCalledWith('/api/feed?category=%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7&page=2',
+      expect.objectContaining({ credentials: 'include' }))
+  })
+
+  it('search 透传 sort', async () => {
+    const f = stubFetch({ cards: [], has_more: false, total: 0 })
+    vi.stubGlobal('fetch', f)
+    await createRealClient().search('kv', 'stars', 1)
+    expect(f).toHaveBeenCalledWith('/api/search?q=kv&sort=stars&page=1', expect.anything())
+  })
+
+  it('错误响应透出后端 detail', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ detail: '未知分类:xx' }), { status: 422 })))
+    await expect(createRealClient().feed('xx', 1)).rejects.toThrow('未知分类:xx')
+  })
+
+  it('repoTree/repoFile/related 走正确端点', async () => {
+    const f = stubFetch([])
+    vi.stubGlobal('fetch', f)
+    const c = createRealClient()
+    await c.repoTree(3); await c.repoFile(3, 'README.md'); await c.related(3)
+    const urls = f.mock.calls.map((x) => x[0] as string)
+    expect(urls).toEqual(['/api/repos/3/tree', '/api/repos/3/files?path=README.md', '/api/repos/3/related'])
+  })
+
+  it('interact 发送显式 active', async () => {
+    const f = stubFetch({ active: true })
+    vi.stubGlobal('fetch', f)
+    await createRealClient().interact(5, 'like', true)
+    expect(f).toHaveBeenCalledWith('/api/interactions',
+      expect.objectContaining({ method: 'POST', body: JSON.stringify({ repo_id: 5, kind: 'like', active: true }) }))
+  })
+
+  it('myFavorites/myLikes 读 id 列表', async () => {
+    const f = stubFetch([1, 2])
+    vi.stubGlobal('fetch', f)
+    expect(await createRealClient().myLikes()).toEqual([1, 2])
+    expect(f).toHaveBeenCalledWith('/api/me/interaction-ids?kind=like', expect.anything())
+  })
+})

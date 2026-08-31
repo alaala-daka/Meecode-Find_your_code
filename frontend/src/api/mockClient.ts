@@ -3,7 +3,7 @@ import {
   CATEGORIES, FIXTURE_FILES, FIXTURE_REPOS, FIXTURE_TREE, FIXTURE_USER,
 } from './fixtures'
 import type {
-  AiDraftResult, ApiClient, FeedPage, InteractKind, RepoCardData, RepoDetail,
+  AiDraftResult, ApiClient, FeedPage, InteractKind, MyGithubRepo, RepoCardData, RepoDetail,
   RepoFile, RepoTreeItem, SearchResult, SubmitPayload, UserProfile,
 } from './types'
 
@@ -12,11 +12,12 @@ const PAGE_SIZE = 8
 // AI 分类推荐（mock 规则）：按 topics/仓库名/语言命中关键词计分，取最高分分类；真实后端就绪后由 LLM 给出
 const CATEGORY_KEYWORDS: Array<[string, string[]]> = [
   ['AI 与机器学习', ['ai', 'llm', 'agent', 'gpt', 'ml', 'eval', 'rag', 'model']],
-  ['开发工具', ['git', 'hook', 'cli', 'lint', 'debug', 'markdown', 'slides', 'sdk', 'editor']],
+  // 效率脚本类已并入后端 8 类的「开发工具」，关键词随迁保证 dot-snap 类仓库仍可推荐
+  ['开发工具', ['git', 'hook', 'cli', 'lint', 'debug', 'markdown', 'slides', 'sdk', 'editor',
+    'backup', 'dotfiles', 'script', 'shell', 'automation', 'workflow']],
   ['Web 应用', ['web', 'http', 'fetch', 'blog', 'vitepress', 'server', 'router', 'ui']],
-  ['系统底层', ['kv', 'storage', 'rust', 'wasm', 'os', 'kernel', 'runtime', 'db', 'cache']],
+  ['系统与底层', ['kv', 'storage', 'rust', 'wasm', 'os', 'kernel', 'runtime', 'db', 'cache']],
   ['数据处理', ['csv', 'sql', 'data', 'etl', 'query', 'performance']],
-  ['效率脚本', ['backup', 'dotfiles', 'script', 'shell', 'automation', 'workflow']],
 ]
 
 function suggestCategory(card: RepoCardData): string {
@@ -106,8 +107,14 @@ export function createMockClient(): ApiClient {
         .sort((a, b) => b.stars - a.stars)
         .slice(0, 3)
     },
-    async myRepos(): Promise<RepoCardData[]> {
-      return state.repos.filter((r) => r.source === 'submitted' && r.owner_login === FIXTURE_USER.login)
+    async myRepos(): Promise<MyGithubRepo[]> {
+      return state.repos
+        .filter((r) => r.owner_login === FIXTURE_USER.login)
+        .map((r) => ({
+          github_id: r.id, full_name: r.full_name, title: r.title,
+          language: r.language, stars: r.stars,
+          status: r.source === 'submitted' ? 'published' as const : 'pending_claim' as const,
+        }))
     },
     async submitRepo(payload: SubmitPayload): Promise<RepoCardData> {
       const next: RepoCardData = {

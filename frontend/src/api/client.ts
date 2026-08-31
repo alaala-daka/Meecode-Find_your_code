@@ -1,12 +1,12 @@
-// src/api/client.ts —— 唯一数据入口；信息流暂无真实后端，恒走 mock
+// src/api/client.ts —— 唯一数据入口;VITE_USE_MOCK=false 走真实后端,缺省 mock(离线开发)
 import { createMockClient } from './mockClient'
+import { createRealClient } from './realClient'
 import type { ApiClient } from './types'
 
 export type { ApiClient }
 
 export function createClient(): ApiClient {
-  // 信息流真实后端就绪后在此按开关接 fetch('/api/...')，类型不变
-  return createMockClient()
+  return import.meta.env.VITE_USE_MOCK === 'false' ? createRealClient() : createMockClient()
 }
 
 export const api = createClient()

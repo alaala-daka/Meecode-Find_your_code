@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
-import type { RepoCardData } from '../api/types'
+import type { MyGithubRepo, RepoCardData } from '../api/types'
 import Button from '../components/Button'
 import LoginModal from '../components/LoginModal'
 import RepoCard from '../components/RepoCard'
@@ -20,8 +20,8 @@ export default function SubmitPage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const [step, setStep] = useState(0)
-  const [repos, setRepos] = useState<RepoCardData[]>([])
-  const [picked, setPicked] = useState<RepoCardData | null>(null)
+  const [repos, setRepos] = useState<MyGithubRepo[]>([])
+  const [picked, setPicked] = useState<MyGithubRepo | null>(null)
   const [cats, setCats] = useState<string[]>([])
   const [tagline, setTagline] = useState('')
   const [intro, setIntro] = useState('')
@@ -55,7 +55,7 @@ export default function SubmitPage() {
     setDrafting(true)
     setActionError(null)
     try {
-      const draft = await api.aiDraft(picked.id)
+      const draft = await api.aiDraft(picked.github_id)
       setTagline(draft.tagline_zh.slice(0, TAGLINE_MAX))
       setIntro(draft.intro_zh)
       // 自动推荐分类：选中 AI 建议并打上角标，用户可随时改选
@@ -104,6 +104,16 @@ export default function SubmitPage() {
     )
   }
 
+  // 预览卡片：把选中的 GitHub 仓库映射成真实 RepoCard 形状（id/互动计数为占位值，仅用于预览）
+  const previewCard: RepoCardData | null = picked
+    ? {
+        id: 0, full_name: picked.full_name, title: picked.title, owner_login: user.login,
+        language: picked.language, topics: [], stars: picked.stars, views: 0, likes: 0,
+        source: 'submitted', category, tagline_zh: tagline || '一句话卖点会显示在这里',
+        published_at: new Date().toISOString(), cover_url: null,
+      }
+    : null
+
   return (
     <>
       <TopBar />
@@ -121,15 +131,14 @@ export default function SubmitPage() {
           <section className="submit-section">
             <ul className="my-repos">
               {repos.map((r) => (
-                <li key={r.id}>
-                  <label className={`my-repo ${picked?.id === r.id ? 'is-picked' : ''}`}>
-                    <input type="radio" name="pick" checked={picked?.id === r.id}
+                <li key={r.github_id}>
+                  <label className={`my-repo ${picked?.github_id === r.github_id ? 'is-picked' : ''}`}>
+                    <input type="radio" name="pick" checked={picked?.github_id === r.github_id}
                       onChange={() => setPicked(r)} aria-label={r.title} />
                     <span className="my-repo-name">{r.title}</span>
                     <span className="my-repo-stars">★ {r.stars}</span>
-                    <span className={`source-badge badge-${r.source}`}>
-                      {r.source === 'submitted' ? '已投稿' : '已在觅码 · 认领'}
-                    </span>
+                    {r.status === 'published' && <span className="source-badge badge-submitted">已投稿</span>}
+                    {r.status === 'pending_claim' && <span className="source-badge badge-crawled">已在觅码 · 认领</span>}
                   </label>
                 </li>
               ))}
@@ -188,9 +197,7 @@ export default function SubmitPage() {
             </div>
             <div className="edit-preview">
               <p className="preview-label">卡片预览</p>
-              <RepoCard
-                data={{ ...picked, tagline_zh: tagline || '一句话卖点会显示在这里' }}
-              />
+              {previewCard && <RepoCard data={previewCard} />}
             </div>
           </section>
         )}
