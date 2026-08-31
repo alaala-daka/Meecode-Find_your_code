@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import time
 import uuid
+from contextlib import asynccontextmanager
 from typing import Iterator
 
 from fastapi import FastAPI, HTTPException
@@ -14,32 +15,46 @@ from . import config, gh
 from .agent import prompts
 from .agent.graph import run_elaborate, run_expand, run_repo_topic, run_rewrite
 from .agent.mock import mock_chat_events, mock_repo_context
+from .feed import db
+from .feed.routes import feed as feed_routes
+from .feed.routes import me as me_routes
+from .feed.routes import repos as repos_routes
+from .feed.routes import submit as submit_routes
 from .llm import chat_stream_events
-from .schemas import (
-    ChatRequest,
-    CreateRootRequest,
-    CreateRootResponse,
-    CreateSessionResponse,
-    DetailRequest,
-    DetailResponse,
-    EdgePayload,
-    ExpandRequest,
-    ExpandResponse,
-    NodePayload,
-    RepoRootRequest,
-    RepoRootResponse,
-    Settings,
+from .schemas import (  # 解读域 schemas,原样
+    ChatRequest, CreateRootRequest, CreateRootResponse, CreateSessionResponse,
+    DetailRequest, DetailResponse, EdgePayload, ExpandRequest, ExpandResponse,
+    NodePayload, RepoRootRequest, RepoRootResponse, Settings,
 )
 
-app = FastAPI(title="Concept Simplify API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """进程启动时建表(fail-fast):DB 异常在启动期暴露,而不是第一个请求 500。"""
+    config.ensure_prod_secrets()
+    conn = db.connect()
+    try:
+        db.init_db(conn)
+    finally:
+        conn.close()
+    yield
+
+
+app = FastAPI(title="觅码 API", version="0.2.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
-    allow_credentials=True,
+    allow_origins=list(config.CORS_ORIGINS),
+    allow_credentials=True,  # 登录态是 cookie,必须允许
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 信息流域路由(前缀 /api)
+app.include_router(feed_routes.router, prefix="/api")
+app.include_router(repos_routes.router, prefix="/api")
+app.include_router(submit_routes.router, prefix="/api")
+app.include_router(me_routes.router, prefix="/api")
 
 # 会话仅存活于进程内存(构思文档开放问题4默认:仅会话内有效)
 _sessions: dict[str, dict] = {}

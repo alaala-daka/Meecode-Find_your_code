@@ -1,0 +1,242 @@
+"""GitHub API 客户端：只读公开信息 + OAuth 换取一次性 token。
+
+限流策略：403/429 且 X-RateLimit-Remaining=0 时按 Retry-After 退避重试；
+超过 MAX_RETRIES 抛 GitHubError，由调用方决定跳过还是降级。
+永不 clone，永不落地仓库文件（见 Global Constraints）。
+"""
+from __future__ import annotations
+
+import base64
+import time
+from datetime import datetime, timedelta, timezone
+
+import httpx
+
+from .. import config
+from . import mock
+
+MAX_RETRIES = 3
+DEFAULT_BACKOFF = 2.0
+TIMEOUT = 20.0
+
+
+class GitHubError(RuntimeError):
+    """GitHub 调用失败：调用方应跳过该仓库或降级展示，不中断整批。"""
+
+
+def _client() -> httpx.Client:
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "meecode"}
+    if config.GITHUB_TOKEN:
+        headers["Authorization"] = f"Bearer {config.GITHUB_TOKEN}"
+    # 绝对 URL：httpx 对相对 URL 做 cookie 提取会崩（urllib 要求绝对地址），
+    # 测试注入无 base_url 的 MockTransport 客户端也照常工作。
+    return httpx.Client(headers=headers, timeout=TIMEOUT)
+
+
+def _get(path: str, params: dict | None = None, *, allow_404: bool = False) -> dict | list | None:
+    last = ""
+    for attempt in range(MAX_RETRIES):
+        try:
+            with _client() as c:
+                resp = c.get(f"{config.GITHUB_API}{path}", params=params)
+        except httpx.HTTPError as exc:
+            last = f"网络错误：{exc}"
+            time.sleep(DEFAULT_BACKOFF * (attempt + 1))
+            continue
+        if resp.status_code == 404 and allow_404:
+            return None
+        if resp.status_code in (403, 429) and resp.headers.get("X-RateLimit-Remaining") == "0":
+            wait = float(resp.headers.get("Retry-After", DEFAULT_BACKOFF * (attempt + 1)))
+            last = f"触发限流（剩余配额 0），已等待 {wait}s"
+            time.sleep(wait)
+            continue
+        if resp.status_code >= 400:
+            raise GitHubError(f"GitHub {resp.status_code}：{resp.text[:200]}")
+        return resp.json()
+    raise GitHubError(f"GitHub 重试 {MAX_RETRIES} 次仍失败：{last}")
+
+
+def _graphql(query: str, variables: dict) -> dict:
+    """GitHub GraphQL 调用：用于读取 giscus 所需的 Discussion 元数据。"""
+    if not config.GITHUB_TOKEN:
+        raise GitHubError("GraphQL 查询需要配置 GITHUB_TOKEN")
+    headers = {
+        "Authorization": f"Bearer {config.GITHUB_TOKEN}",
+        "Content-Type": "application/json",
+    }
+    try:
+        resp = httpx.post(
+            "https://api.github.com/graphql",
+            headers=headers,
+            json={"query": query, "variables": variables},
+            timeout=TIMEOUT,
+        )
+    except httpx.HTTPError as exc:
+        raise GitHubError(f"GitHub GraphQL 请求失败：{exc}") from exc
+    if resp.status_code >= 400:
+        raise GitHubError(f"GitHub GraphQL {resp.status_code}：{resp.text[:200]}")
+    data = resp.json()
+    if data.get("errors"):
+        raise GitHubError(f"GitHub GraphQL 错误：{data['errors']}")
+    return data
+
+
+def get_discussion_meta(full_name: str) -> dict | None:
+    """返回 giscus 所需元数据；仓库未启用 Discussions 或调用失败时返回 None。"""
+    if config.GITHUB_MOCK:
+        # mock 仓库不是真实 GitHub 仓库，giscus 无法工作，返回 None 让前端隐藏评论区
+        return None
+    owner, _, name = full_name.partition("/")
+    query = """
+        query($owner: String!, $name: String!) {
+          repository(owner: $owner, name: $name) {
+            id
+            discussionCategories(first: 10) {
+              nodes { id name }
+            }
+          }
+        }
+    """
+    data = _graphql(query, {"owner": owner, "name": name})
+    repo = (data.get("data") or {}).get("repository") or {}
+    cats = ((repo.get("discussionCategories") or {}).get("nodes") or [])
+    if not cats:
+        return None
+    cat = cats[0]
+    return {
+        "repo_id": repo.get("id", ""),
+        "category": cat.get("name", "General"),
+        "category_id": cat.get("id", ""),
+    }
+
+
+def search_new_repos(language: str, *, now: int | None = None) -> list[dict]:
+    """按语言分片查近期新仓库（Search API 单查询上限 1000，故分片）。"""
+    if config.GITHUB_MOCK:
+        fixtures = mock.mock_repos(now)
+        return [r for r in fixtures if r["language"] == language]
+    since = datetime.fromtimestamp(now or time.time(), timezone.utc) - timedelta(
+        days=config.CRAWL_CREATED_WITHIN_DAYS
+    )
+    q = (
+        f"created:>={since:%Y-%m-%d} "
+        f"stars:>={config.CRAWL_MIN_STARS} fork:false language:{language}"
+    )
+    data = _get("/search/repositories",
+                {"q": q, "sort": "stars", "order": "desc", "per_page": 100})
+    return [_normalize(item) for item in (data or {}).get("items", [])]
+
+
+def _normalize(item: dict) -> dict:
+    """把 Search API 的仓库对象收敛成入库需要的字段。"""
+    return {
+        "id": item["id"],
+        "full_name": item["full_name"],
+        "owner_login": (item.get("owner") or {}).get("login", ""),
+        "language": item.get("language") or "",
+        "topics": item.get("topics") or [],
+        "stars": item.get("stargazers_count", 0),
+        "created_at": _ts(item.get("created_at")),
+        "pushed_at": _ts(item.get("pushed_at")),
+        "license": ((item.get("license") or {}) or {}).get("spdx_id") or "",
+        "default_branch": item.get("default_branch") or "main",
+        "archived": bool(item.get("archived")),
+    }
+
+
+def _ts(value: str | None) -> int:
+    if not value:
+        return 0
+    return int(datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+               .replace(tzinfo=timezone.utc).timestamp())
+
+
+def get_readme(full_name: str) -> str:
+    """README 缺失返回空串（由粗筛判定淘汰），不抛异常。"""
+    if config.GITHUB_MOCK:
+        return mock.mock_readme(full_name)
+    data = _get(f"/repos/{full_name}/readme", allow_404=True)
+    if not data:
+        return ""
+    if data.get("encoding") == "base64":
+        return base64.b64decode(data.get("content", "")).decode("utf-8", "replace")
+    return data.get("content", "")
+
+
+def get_tree(full_name: str, branch: str = "main") -> list[dict]:
+    if config.GITHUB_MOCK:
+        return mock.mock_tree(full_name)
+    data = _get(f"/repos/{full_name}/git/trees/{branch}",
+                {"recursive": "1"}, allow_404=True)
+    if not data:
+        return []
+    return [
+        {"path": t["path"], "type": t["type"], "size": t.get("size", 0)}
+        for t in data.get("tree", [])
+    ]
+
+
+def get_file(full_name: str, path: str, branch: str = "main") -> str:
+    """按需取单个文件内容 —— 代替 clone，见 Global Constraints。"""
+    if config.GITHUB_MOCK:
+        return mock.mock_file(full_name, path)
+    data = _get(f"/repos/{full_name}/contents/{path}", {"ref": branch}, allow_404=True)
+    if not data or data.get("encoding") != "base64":
+        return ""
+    return base64.b64decode(data.get("content", "")).decode("utf-8", "replace")
+
+
+def get_user(login: str) -> dict:
+    if config.GITHUB_MOCK:
+        return mock.mock_user(login)
+    return _get(f"/users/{login}") or {}
+
+
+def list_user_repos(login: str) -> list[dict]:
+    """列出用户自己拥有的公开仓库，供投稿页勾选。"""
+    if config.GITHUB_MOCK:
+        return mock.mock_repos()
+    data = _get(f"/users/{login}/repos",
+                {"type": "owner", "sort": "updated", "per_page": 100})
+    return [_normalize(item) for item in (data or [])]
+
+
+def exchange_oauth_code(code: str) -> str:
+    """用 code 换 access_token；用完即弃，绝不入库（见 Global Constraints）。"""
+    if config.GITHUB_MOCK:
+        return "mock-token"
+    try:
+        resp = httpx.post(
+            "https://github.com/login/oauth/access_token",
+            headers={"Accept": "application/json"},
+            data={
+                "client_id": config.GITHUB_CLIENT_ID,
+                "client_secret": config.GITHUB_CLIENT_SECRET,
+                "code": code,
+            },
+            timeout=TIMEOUT,
+        )
+    except httpx.HTTPError as exc:
+        raise GitHubError(f"OAuth 换取 token 失败：{exc}") from exc
+    token = resp.json().get("access_token", "")
+    if not token:
+        raise GitHubError("OAuth 未返回 access_token，请检查 client 配置")
+    return token
+
+
+def get_authenticated_user(token: str) -> dict:
+    """用一次性 token 读当前登录者身份，随后 token 即丢弃。"""
+    if config.GITHUB_MOCK:
+        return mock.mock_user("demo")
+    try:
+        resp = httpx.get(
+            f"{config.GITHUB_API}/user",
+            headers={"Authorization": f"Bearer {token}",
+                     "Accept": "application/vnd.github+json"},
+            timeout=TIMEOUT,
+        )
+    except httpx.HTTPError as exc:
+        raise GitHubError(f"读取 GitHub 用户失败：{exc}") from exc
+    if resp.status_code >= 400:
+        raise GitHubError(f"读取 GitHub 用户失败：{resp.status_code}")
+    return resp.json()
