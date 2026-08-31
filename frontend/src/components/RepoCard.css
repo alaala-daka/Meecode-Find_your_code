@@ -72,10 +72,12 @@
   min-height: 40px;
 }
 
+/* 元信息行固定单行：放不下时作者名、语言名依次省略号截断，星数与时间始终可见，
+   保证各卡片高度一致（§5 等高网格） */
 .repo-card-meta {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 4px 10px;
   margin-top: auto;
   padding-top: 8px;
@@ -83,10 +85,11 @@
   font-size: 12.5px;
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.meta-author { overflow: hidden; max-width: 40%; text-overflow: ellipsis; white-space: nowrap; }
-.meta-stars { display: inline-flex; align-items: center; gap: 3px; font-family: var(--font-mono); }
+.meta-author { overflow: hidden; max-width: 40%; text-overflow: ellipsis; }
+.meta-stars { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; font-family: var(--font-mono); }
 .star-icon { font-size: 11px; color: var(--ink-3); }
-.lang-dot { width: 8px; height: 8px; border-radius: 50%; }
-.meta-lang { display: inline-flex; align-items: center; gap: 5px; }
-.meta-date { margin-left: auto; font-family: var(--font-mono); }
+.lang-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.meta-lang { display: inline-flex; align-items: center; gap: 5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.meta-date { margin-left: auto; flex-shrink: 0; font-family: var(--font-mono); }
