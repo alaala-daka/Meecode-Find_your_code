@@ -74,4 +74,10 @@ describe('mockClient', () => {
     const api = createMockClient()
     await expect(api.related(999)).rejects.toThrow('仓库不存在')
   })
+  it('me 恒返回模拟用户，logout 为空操作（mock 无会话概念）', async () => {
+    const api = createMockClient()
+    expect(await api.me()).toEqual({ id: 0, login: 'alice', avatar_url: '', bio: '在写小而可读的系统软件。' })
+    await api.logout()
+    expect((await api.me())?.login).toBe('alice')
+  })
 })

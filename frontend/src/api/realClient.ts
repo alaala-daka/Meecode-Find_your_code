@@ -1,6 +1,6 @@
 // src/api/realClient.ts —— 真实后端客户端:fetch('/api/...') + cookie 凭证
 import type {
-  AiDraftResult, ApiClient, FeedPage, InteractKind, MyGithubRepo, RepoCardData,
+  AiDraftResult, ApiClient, CurrentUser, FeedPage, InteractKind, MyGithubRepo, RepoCardData,
   RepoDetail, RepoFile, RepoTreeItem, SearchResult, SubmitPayload, UserProfile,
 } from './types'
 
@@ -90,6 +90,13 @@ export function createRealClient(): ApiClient {
     },
     loginUrl(): string {
       return '/api/auth/github'
+    },
+    async me(): Promise<CurrentUser | null> {
+      // 未登录时后端返回 JSON null，直接透传给会话引导
+      return http<CurrentUser | null>('/api/me')
+    },
+    async logout() {
+      await http('/api/auth/logout', jsonInit('POST'))
     },
   }
 }

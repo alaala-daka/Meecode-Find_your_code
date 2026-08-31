@@ -56,4 +56,26 @@ describe('realClient', () => {
     expect(await createRealClient().myLikes()).toEqual([1, 2])
     expect(f).toHaveBeenCalledWith('/api/me/interaction-ids?kind=like', expect.anything())
   })
+
+  it('me 未登录透传 JSON null', async () => {
+    const f = stubFetch(null)
+    vi.stubGlobal('fetch', f)
+    expect(await createRealClient().me()).toBeNull()
+    expect(f).toHaveBeenCalledWith('/api/me', expect.objectContaining({ credentials: 'include' }))
+  })
+
+  it('me 已登录返回用户对象', async () => {
+    const user = { id: 7, login: 'alice', avatar_url: 'a.png', bio: '在写小而可读的系统软件。' }
+    const f = stubFetch(user)
+    vi.stubGlobal('fetch', f)
+    expect(await createRealClient().me()).toEqual(user)
+  })
+
+  it('logout POST /api/auth/logout 清会话', async () => {
+    const f = stubFetch({ ok: true })
+    vi.stubGlobal('fetch', f)
+    await createRealClient().logout()
+    expect(f).toHaveBeenCalledWith('/api/auth/logout',
+      expect.objectContaining({ method: 'POST', credentials: 'include' }))
+  })
 })

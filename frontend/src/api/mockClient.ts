@@ -3,7 +3,7 @@ import {
   CATEGORIES, FIXTURE_FILES, FIXTURE_REPOS, FIXTURE_TREE, FIXTURE_USER,
 } from './fixtures'
 import type {
-  AiDraftResult, ApiClient, FeedPage, InteractKind, MyGithubRepo, RepoCardData, RepoDetail,
+  AiDraftResult, ApiClient, CurrentUser, FeedPage, InteractKind, MyGithubRepo, RepoCardData, RepoDetail,
   RepoFile, RepoTreeItem, SearchResult, SubmitPayload, UserProfile,
 } from './types'
 
@@ -177,6 +177,19 @@ export function createMockClient(): ApiClient {
     },
     loginUrl(): string {
       return '/api/auth/github'
+    },
+    async me(): Promise<CurrentUser | null> {
+      // mock 无会话概念：恒返回模拟用户（映射为 CurrentUser 形状），保证投稿/收藏等演示流程可用；
+      // 纯 mock dev 下点登录会真实跳转 /api/auth/github 并 404，属既有 mock 局限（不造假后端）
+      return {
+        id: 0, // 模拟用户无真实 id
+        login: FIXTURE_USER.login,
+        avatar_url: FIXTURE_USER.avatar_url,
+        bio: FIXTURE_USER.bio,
+      }
+    },
+    async logout() {
+      // mock 无会话状态可清：登出为空操作
     },
   }
 }

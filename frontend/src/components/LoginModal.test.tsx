@@ -1,12 +1,13 @@
 // src/components/LoginModal.test.tsx
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAuthStore } from '../store/authStore'
 import LoginModal from './LoginModal'
 
 describe('LoginModal', () => {
   beforeEach(() => useAuthStore.setState({ user: null }))
+  afterEach(() => vi.unstubAllGlobals())
 
   it('open 时显示登录引导', () => {
     render(<LoginModal open onClose={() => {}} />)
@@ -17,11 +18,13 @@ describe('LoginModal', () => {
     render(<LoginModal open={false} onClose={() => {}} />)
     expect(screen.queryByText('用 GitHub 登录')).not.toBeInTheDocument()
   })
-  it('点击登录写入登录态并关闭', async () => {
+  it('点击登录跳转 GitHub OAuth 并关闭', async () => {
+    const assign = vi.fn()
+    vi.stubGlobal('location', { assign })
     const onClose = vi.fn()
     render(<LoginModal open onClose={onClose} />)
     await userEvent.click(screen.getByText('用 GitHub 登录'))
-    expect(useAuthStore.getState().user?.login).toBe('alice')
+    expect(assign).toHaveBeenCalledWith('/api/auth/github')
     expect(onClose).toHaveBeenCalled()
   })
   it('打开时焦点移入弹层', () => {

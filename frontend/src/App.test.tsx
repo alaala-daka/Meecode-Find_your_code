@@ -3,8 +3,9 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
+import { api } from './api/client'
 import { useAuthStore } from './store/authStore'
 
 function renderAt(url: string) {
@@ -12,7 +13,12 @@ function renderAt(url: string) {
 }
 
 describe('App 路由冒烟', () => {
-  beforeEach(() => useAuthStore.setState({ user: null }))
+  beforeEach(() => {
+    useAuthStore.setState({ user: null })
+    // App 挂载会做 /api/me 会话引导：冒烟测试统一按匿名会话处理
+    vi.spyOn(api, 'me').mockResolvedValue(null)
+  })
+  afterEach(() => vi.restoreAllMocks())
 
   it('首页渲染顶栏与卡片流', async () => {
     renderAt('/')

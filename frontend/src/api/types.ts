@@ -81,6 +81,14 @@ export interface MyGithubRepo {
   status: '' | 'published' | 'pending_claim'
 }
 
+// 当前登录用户（对齐后端 GET /api/me 的 UserOut；匿名时接口返回 JSON null）
+export interface CurrentUser {
+  id: number
+  login: string
+  avatar_url: string
+  bio: string
+}
+
 export interface ApiClient {
   categories(): Promise<string[]>
   feed(category: string | null, page: number): Promise<FeedPage>
@@ -102,4 +110,6 @@ export interface ApiClient {
   myLikes(): Promise<number[]>
   delist(repoId: number): Promise<void>
   loginUrl(): string
+  me(): Promise<CurrentUser | null> // GET /api/me：会话引导，未登录返回 null
+  logout(): Promise<void>           // POST /api/auth/logout：清除会话 cookie
 }
