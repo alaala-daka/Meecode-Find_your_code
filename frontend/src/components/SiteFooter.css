@@ -1,6 +1,5 @@
-/* src/components/SiteFooter.css —— 页脚：发丝线收边，纸面基调，极简三件 */
+/* src/components/SiteFooter.css —— 页脚：发丝线收边（仅内容区宽度），纸面基调，极简三件 */
 .site-footer {
-  border-top: 1px solid var(--line);
   background: var(--paper);
 }
 .site-footer-inner {
@@ -11,6 +10,7 @@
   max-width: var(--shell-max);
   margin: 0 auto;
   padding: 28px var(--shell-pad) 36px;
+  border-top: 1px solid var(--line);
 }
 .footer-brand {
   display: inline-flex;

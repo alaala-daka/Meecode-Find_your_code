@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import Avatar from './Avatar'
 import LoginModal from './LoginModal'
 import './TopBar.css'
 
@@ -84,8 +85,8 @@ export default function TopBar() {
           </button>
           <button className="btn btn-primary btn-submit" onClick={goSubmit}>+ 推广我的仓库</button>
           {user ? (
-            <Link className="avatar-sm" to={`/user/${user.login}`} aria-label="个人主页">
-              {user.login.slice(0, 1).toUpperCase()}
+            <Link className="avatar-link" to={`/user/${user.login}`} aria-label="个人主页">
+              <Avatar login={user.login} avatarUrl={user.avatar_url} className="avatar-sm" />
             </Link>
           ) : (
             <button className="login-entry" onClick={() => setLoginOpen(true)}>登录</button>

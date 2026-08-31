@@ -1,0 +1,10 @@
+/* src/components/Avatar.css —— 头像容器裁切与图片填充 */
+.avatar {
+  display: inline-flex;
+  overflow: hidden;
+}
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

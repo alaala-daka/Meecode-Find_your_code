@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { RepoCardData, UserProfile } from '../api/types'
+import Avatar from '../components/Avatar'
 import EmptyState from '../components/EmptyState'
 import ErrorBanner from '../components/ErrorBanner'
 import RepoCard from '../components/RepoCard'
@@ -86,9 +87,7 @@ export default function ProfilePage() {
       <TopBar />
       <div className="profile-banner">
         <header className="page-shell profile-head-wrap">
-          <div className="profile-avatar" role="img" aria-label={`${profile.login} 的头像`}>
-            {profile.login.slice(0, 1).toUpperCase()}
-          </div>
+          <Avatar login={profile.login} avatarUrl={profile.avatar_url} className="profile-avatar" />
           <div className="profile-info">
             <h1 className="profile-name">{profile.login}</h1>
             {editingBio ? (
