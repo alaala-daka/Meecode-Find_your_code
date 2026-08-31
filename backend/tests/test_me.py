@@ -1,8 +1,12 @@
-"""登录、签名、互动切换、个人三个 tab。"""
+"""登录、签名、互动显式 on/off、个人三个 tab。"""
+from concurrent.futures import ThreadPoolExecutor
+
 import pytest
 from fastapi.testclient import TestClient
 
 from app.feed import auth, deps
+from app.feed.routes.me import _set_interaction_row
+from app.feed.schemas import InteractionIn
 from app import config
 from app.main import app
 
@@ -94,12 +98,16 @@ def test_bio_requires_login(client):
     assert client.put("/api/me/bio", json={"bio": "x"}).status_code == 401
 
 
-def test_interaction_toggles_on_and_off(conn, client, login):
+def test_interaction_on_and_off_explicit(conn, client, login):
     rid = add_repo(conn, 1)
-    first = client.post("/api/interactions", json={"repo_id": rid, "kind": "favorite"}).json()
-    assert first["active"] is True
-    second = client.post("/api/interactions", json={"repo_id": rid, "kind": "favorite"}).json()
-    assert second["active"] is False
+    on = InteractionIn(repo_id=rid, kind="favorite", active=True).model_dump()
+    assert client.post("/api/interactions", json=on).json() == {"active": True}
+    # 显式语义:重复 on 不翻面,响应恒为传入的目标状态
+    assert client.post("/api/interactions", json=on).json() == {"active": True}
+    assert conn.execute(
+        "SELECT count(*) c FROM interactions WHERE kind='favorite'").fetchone()["c"] == 1
+    off = InteractionIn(repo_id=rid, kind="favorite", active=False).model_dump()
+    assert client.post("/api/interactions", json=off).json() == {"active": False}
     assert conn.execute(
         "SELECT count(*) c FROM interactions WHERE kind='favorite'").fetchone()["c"] == 0
 
@@ -107,20 +115,20 @@ def test_interaction_toggles_on_and_off(conn, client, login):
 def test_interaction_rejects_bad_kind(conn, client, login):
     rid = add_repo(conn, 1)
     assert client.post("/api/interactions",
-                       json={"repo_id": rid, "kind": "visit"}).status_code == 422
+                       json={"repo_id": rid, "kind": "visit", "active": True}).status_code == 422
     assert client.post("/api/interactions",
-                       json={"repo_id": rid, "kind": "hack"}).status_code == 422
+                       json={"repo_id": rid, "kind": "hack", "active": True}).status_code == 422
 
 
 def test_interaction_rejects_unknown_repo(client, login):
     assert client.post("/api/interactions",
-                       json={"repo_id": 9999, "kind": "like"}).status_code == 404
+                       json={"repo_id": 9999, "kind": "like", "active": True}).status_code == 404
 
 
 def test_interaction_requires_login(conn, client):
     rid = add_repo(conn, 1)
     assert client.post("/api/interactions",
-                       json={"repo_id": rid, "kind": "like"}).status_code == 401
+                       json={"repo_id": rid, "kind": "like", "active": True}).status_code == 401
 
 
 def test_my_repos_excludes_delisted(conn, client, login):
@@ -135,7 +143,7 @@ def test_my_repos_excludes_delisted(conn, client, login):
 
 def test_favorites_returns_only_favorited(conn, client, login):
     a, b = add_repo(conn, 1), add_repo(conn, 2)
-    client.post("/api/interactions", json={"repo_id": a, "kind": "favorite"})
+    client.post("/api/interactions", json={"repo_id": a, "kind": "favorite", "active": True})
     items = client.get("/api/me/favorites").json()
     assert [c["id"] for c in items] == [a]
 
@@ -159,3 +167,47 @@ def test_history_excludes_delisted(conn, client, login):
 def test_personal_endpoints_require_login(client):
     for path in ("/api/me/repos", "/api/me/favorites", "/api/me/history"):
         assert client.get(path).status_code == 401, path
+
+
+def _seed_user_repo(conn):
+    conn.execute("INSERT INTO users (github_id, login) VALUES (1, 'u')")
+    conn.execute(
+        "INSERT INTO repos (github_id, full_name, owner_login, source, status)"
+        " VALUES (10, 'a/b', 'a', 'submitted', 'published')"
+    )
+    conn.commit()
+
+
+def test_set_interaction_on_off_explicit(conn):
+    _seed_user_repo(conn)
+    _set_interaction_row(conn, 1, 1, "like", True)
+    n = conn.execute("SELECT COUNT(*) AS n FROM interactions").fetchone()["n"]
+    assert n == 1
+    _set_interaction_row(conn, 1, 1, "like", True)   # 幂等:重复 on 不翻面
+    n = conn.execute("SELECT COUNT(*) AS n FROM interactions").fetchone()["n"]
+    assert n == 1
+    _set_interaction_row(conn, 1, 1, "like", False)
+    n = conn.execute("SELECT COUNT(*) AS n FROM interactions").fetchone()["n"]
+    assert n == 0
+    _set_interaction_row(conn, 1, 1, "like", False)  # 幂等:重复 off 不报错
+
+
+def test_set_interaction_concurrent_no_error(tmp_path):
+    """并发 upsert/delete 不得 500 或 IntegrityError(WAL + busy_timeout 兜底)。"""
+    from app.feed import db as feed_db
+
+    db_path = str(tmp_path / "conc.db")
+    boot = feed_db.connect(db_path)
+    feed_db.init_db(boot)
+    _seed_user_repo(boot)
+    boot.close()
+
+    def hit(active: bool) -> None:
+        c = feed_db.connect(db_path)
+        try:
+            _set_interaction_row(c, 1, 1, "like", active)
+        finally:
+            c.close()
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        list(pool.map(hit, [True, False] * 8))

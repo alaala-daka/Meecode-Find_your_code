@@ -121,4 +121,5 @@ class BioIn(BaseModel):
 
 class InteractionIn(BaseModel):
     repo_id: int
-    kind: str  # 仅 like / favorite；visit 由服务端在详情接口写入
+    kind: str    # 仅 like / favorite;visit 由服务端在详情接口写入
+    active: bool

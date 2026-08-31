@@ -1,18 +1,19 @@
-"""FastAPI 依赖：数据库连接。测试用 dependency_overrides 换成内存库。"""
+"""FastAPI 依赖:每请求一个 SQLite 连接。
+
+进程级单连接会让并发请求共享同一事务:请求 A 的 commit 会把请求 B 的半成品写
+一起提交,读侧也可能看到未提交数据。WAL 下建连廉价,每请求连接彻底消除事务交叉。
+"""
 from __future__ import annotations
 
 import sqlite3
-from typing import Iterator
+from collections.abc import Iterator
 
 from . import db
 
-_conn: sqlite3.Connection | None = None
-
 
 def get_conn() -> Iterator[sqlite3.Connection]:
-    """进程内单连接：SQLite + WAL 足够 MVP 用量，扛不住再换连接池。"""
-    global _conn
-    if _conn is None:
-        _conn = db.connect()
-        db.init_db(_conn)
-    yield _conn
+    conn = db.connect()
+    try:
+        yield conn
+    finally:
+        conn.close()

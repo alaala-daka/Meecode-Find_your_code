@@ -94,6 +94,7 @@ def connect(path: str | None = None) -> sqlite3.Connection:
     conn = sqlite3.connect(target, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA busy_timeout = 5000")  # 写锁竞争时等 5s,而不是立刻 OperationalError
     if target != ":memory:":
         conn.execute("PRAGMA journal_mode = WAL")
     return conn

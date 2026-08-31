@@ -1,4 +1,4 @@
-"""登录、个人数据、互动切换。
+"""登录、个人数据、互动显式 on/off。
 
 登录仅 GitHub OAuth：觅码账号即 GitHub 账号，无独立注册。
 OAuth scope 只要 read:user —— 不申请 repo（不读私有代码，见 spec 账号边界）。
@@ -97,11 +97,28 @@ def update_bio(
                    avatar_url=user["avatar_url"], bio=body.bio.strip())
 
 
+def _set_interaction_row(
+    conn: sqlite3.Connection, user_id: int, repo_id: int, kind: str, active: bool
+) -> None:
+    """显式 on/off(幂等)替代读改写 toggle:并发下无竞态、无 IntegrityError。"""
+    if active:
+        conn.execute(
+            "INSERT INTO interactions (user_id, repo_id, kind, updated_at) VALUES (?,?,?,?)"
+            " ON CONFLICT(user_id, repo_id, kind) DO UPDATE SET updated_at = excluded.updated_at",
+            (user_id, repo_id, kind, int(time.time())),
+        )
+    else:
+        conn.execute(
+            "DELETE FROM interactions WHERE user_id = ? AND repo_id = ? AND kind = ?",
+            (user_id, repo_id, kind),
+        )
+
+
 @router.post("/interactions")
-def toggle_interaction(
+def set_interaction(
     body: InteractionIn, request: Request, conn: sqlite3.Connection = Depends(get_conn)
 ) -> dict:
-    """点赞/收藏切换。visit 不走这里 —— 它由详情接口写入。"""
+    """点赞/收藏显式切换(前端传目标状态)。visit 不走这里 —— 它由详情接口写入。"""
     user = auth.require_user(request, conn)
     if body.kind not in TOGGLEABLE:
         raise HTTPException(status_code=422, detail="kind 只能是 like 或 favorite")
@@ -110,22 +127,9 @@ def toggle_interaction(
     ).fetchone()
     if exists is None:
         raise HTTPException(status_code=404, detail="仓库不存在或已下架")
-
-    hit = conn.execute(
-        "SELECT id FROM interactions WHERE user_id=? AND repo_id=? AND kind=?",
-        (user["id"], body.repo_id, body.kind),
-    ).fetchone()
-    if hit:
-        conn.execute("DELETE FROM interactions WHERE id = ?", (hit["id"],))
-        active = False
-    else:
-        conn.execute(
-            "INSERT INTO interactions (user_id, repo_id, kind, updated_at) VALUES (?,?,?,?)",
-            (user["id"], body.repo_id, body.kind, int(time.time())),
-        )
-        active = True
+    _set_interaction_row(conn, user["id"], body.repo_id, body.kind, body.active)
     conn.commit()
-    return {"active": active}
+    return {"active": body.active}
 
 
 @router.get("/me/repos", response_model=list[RepoCard])
