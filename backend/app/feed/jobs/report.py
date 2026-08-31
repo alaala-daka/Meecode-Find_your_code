@@ -4,7 +4,7 @@
 只比同一 72 小时窗口 —— impression_count 是累计值，跟老仓库比会偏袒老仓库。
 达标率掉到 50% 以下即为上调 RESERVED_RATIO 的信号。指标本身即监控，不建看板。
 
-手动触发：python -m app.jobs.report
+手动触发：python -m app.feed.jobs.report
 """
 from __future__ import annotations
 

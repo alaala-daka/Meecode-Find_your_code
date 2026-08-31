@@ -2,6 +2,7 @@
 from app import config
 from app.feed import github, screening
 from app.feed.jobs import crawl
+from app.feed.schemas import ScreeningResult
 
 NOW = 1_700_000_000
 LONG_README = "这是一个真实项目的说明文档。" * 60
@@ -110,3 +111,68 @@ def test_llm_failure_skips_repo_without_crashing(conn, monkeypatch):
     monkeypatch.setattr(screening, "screen_repo", boom)
     stats = crawl.crawl_once(conn, now=NOW)  # 不抛异常
     assert stats["inserted"] == 0 and stats["skipped"] == 3
+
+
+def test_llm_only_for_topk(monkeypatch, conn):
+    """规则通过 3 个、配额 1 + 缓冲 1:LLM 只跑 2 次,而不是 3 次。"""
+    monkeypatch.setattr(config, "CRAWL_LANGUAGES", ("Python",))
+    monkeypatch.setattr(config, "CRAWL_DAILY_QUOTA", 1)
+    monkeypatch.setattr(config, "CRAWL_SCREEN_BUFFER", 1)
+    # created_at/pushed_at 取近期(相对 now):否则粗筛必拒,测不到 top-K 语义
+    monkeypatch.setattr(github, "search_new_repos", lambda lang, now=None: [
+        {"id": 100 + i, "full_name": f"o/r{i}", "owner_login": "o", "language": "Python",
+         "topics": [], "stars": 50, "created_at": (now or 1_800_000_000) - 7 * 86400,
+         "pushed_at": (now or 1_800_000_000) - 86400, "license": "",
+         "default_branch": "main", "archived": False} for i in range(3)])
+    monkeypatch.setattr(github, "get_readme", lambda *a: "r" * 600)
+    monkeypatch.setattr(github, "get_tree", lambda *a, **k: [
+        {"path": f"f{i}.py", "type": "blob", "size": 1} for i in range(6)])
+    monkeypatch.setattr(github, "get_user", lambda *a: {"followers": 0})
+    calls: list[str] = []
+
+    def fake_screen(full_name, readme, tree):
+        calls.append(full_name)
+        return ScreeningResult(is_real_project=True, category="开发工具",
+                               tagline_zh="t", why_zh="w", quality=4)
+
+    monkeypatch.setattr(screening, "screen_repo", fake_screen)
+    stats = crawl.crawl_once(conn, now=1_800_000_000)
+    assert len(calls) == 2  # K = quota + buffer
+    assert stats["inserted"] == 1
+
+
+def test_rescreen_pending_updates_quality_only(conn, monkeypatch):
+    conn.execute(
+        "INSERT INTO repos (github_id, full_name, owner_login, source, status, tagline_zh,"
+        " intro_zh, quality, screened, readme_md, default_branch, category, published_at)"
+        " VALUES (1, 'a/b', 'a', 'submitted', 'published', '作者卖点', '作者介绍', 3, 0,"
+        " 'r' * 600, 'main', '其他', 1756000000)"
+    )
+    conn.commit()
+    monkeypatch.setattr(github, "get_tree", lambda *a, **k: [
+        {"path": f"f{i}.py", "type": "blob", "size": 1} for i in range(6)])
+    monkeypatch.setattr(screening, "screen_repo", lambda *a, **k: ScreeningResult(
+        is_real_project=True, category="数据处理", tagline_zh="AI 卖点", why_zh="w", quality=5))
+    done = crawl.rescreen_pending(conn)
+    assert done == 1
+    row = conn.execute("SELECT * FROM repos WHERE id = 1").fetchone()
+    assert row["quality"] == 5 and row["screened"] == 1
+    assert row["tagline_zh"] == "作者卖点"  # 作者文案绝不被 AI 覆盖
+    assert row["category"] == "其他"       # 投稿的分类也不动
+
+
+def test_rescreen_llm_failure_keeps_pending(conn, monkeypatch):
+    conn.execute(
+        "INSERT INTO repos (github_id, full_name, owner_login, source, status, quality,"
+        " screened, readme_md, default_branch, published_at)"
+        " VALUES (1, 'a/b', 'a', 'crawled', 'pending_claim', 3, 0, 'r' * 600, 'main', 1756000000)"
+    )
+    conn.commit()
+
+    def boom(*a, **k):
+        raise RuntimeError("LLM down")
+
+    monkeypatch.setattr(github, "get_tree", lambda *a, **k: [])
+    monkeypatch.setattr(screening, "screen_repo", boom)
+    assert crawl.rescreen_pending(conn) == 0
+    assert conn.execute("SELECT screened FROM repos WHERE id = 1").fetchone()["screened"] == 0
