@@ -7,6 +7,12 @@ dist/
 feedback/
 desktop.ini
 
+# 设计稿/未使用的图片素材
+logo_redesign/
+
+# 本地数据库
+*.db
+
 # backend (Python)
 __pycache__/
 *.pyc
