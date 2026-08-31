@@ -217,7 +217,7 @@ export default function RepoPage() {
               {tab === 'explain' && <ExplainPanel repo={detail} />}
             </div>
 
-            <ReadmeSection repoId={repoId} tree={tree} />
+            <ReadmeSection repoId={repoId} tree={tree} fullName={detail.full_name} defaultBranch={detail.default_branch} />
 
             <section className="repo-discussions">
               <h2 className="discussions-title">讨论</h2>

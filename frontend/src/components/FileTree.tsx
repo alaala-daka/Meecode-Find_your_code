@@ -10,7 +10,7 @@ interface Props {
 }
 
 function Node({ item, depth, current, onSelect }: { item: RepoTreeItem; depth: number } & Omit<Props, 'tree'>) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false) // 默认全部收起，与 GitHub 文件树一致
   if (item.type === 'dir') {
     return (
       <li>

@@ -38,6 +38,8 @@ describe('RepoPage', () => {
     // README.md 同时出现在文件树与代码区文件名栏，故用 findAllByText
     expect((await screen.findAllByText('README.md')).length).toBeGreaterThanOrEqual(2)
     expect(screen.getByTestId('code-content')).toHaveTextContent('200 行的 LLM Agent 运行时')
+    // 目录默认收起：先展开 src 再点 main.py
+    await userEvent.click(screen.getByRole('button', { name: /src/ }))
     await userEvent.click(screen.getAllByText('main.py')[0])
     expect(screen.getByTestId('code-content')).toHaveTextContent('from loop import run')
   })
