@@ -1,7 +1,8 @@
 """仓库详情与文件预览。
 
 文件预览走 GitHub API 实时代理 —— 绝不 clone、绝不落地仓库文件。
-GitHub 故障一律降级为空内容 + error 文案，由前端提示「去 GitHub 查看」。
+瞬时故障（GitHubError）抛 502，确定性结果（二进制/超大文件）抛 422，
+不再用 error 字段降级：空内容对前端就是错的，明确报错才能引导用户。
 降级结果不进缓存：GitHubError 穿过 lru_cache 往外抛（抛异常的调用不会被
 缓存），下次请求自动重试，限流窗口过去即恢复（见 spec 第 9 节）。
 """
@@ -14,16 +15,18 @@ from functools import lru_cache
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from ... import config
-from .. import auth, github
+from .. import auth, cards, github, ranking
 from ..deps import get_conn
-from ..schemas import FileOut, RepoDetail, TreeEntry, TreeOut
+from ..schemas import RepoCardOut, RepoDetailOut, RepoFileOut, TreeItem
 
 router = APIRouter()
 
 
 def _load(conn: sqlite3.Connection, repo_id: int) -> sqlite3.Row:
+    # 卡片查询带 like_count 实时子查询:详情/related 直接复用卡片字段口径
     row = conn.execute(
-        "SELECT * FROM repos WHERE id = ? AND status != 'delisted'", (repo_id,)
+        cards._card_select("FROM repos r")
+        + " WHERE r.id = ? AND r.status != 'delisted'", (repo_id,)
     ).fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail="仓库不存在或已下架")
@@ -38,19 +41,18 @@ def _safe_path(path: str) -> str:
     return p
 
 
-@router.get("/repos/{repo_id}", response_model=RepoDetail)
+@router.get("/repos/{repo_id}", response_model=RepoDetailOut)
 def get_repo(
     repo_id: int,
     request: Request,
     conn: sqlite3.Connection = Depends(get_conn),
-) -> RepoDetail:
+) -> RepoDetailOut:
     row = _load(conn, repo_id)
     conn.execute(
         "UPDATE repos SET repo_view_count = repo_view_count + 1 WHERE id = ?", (repo_id,)
     )
 
     user = auth.current_user(request, conn)
-    liked = favorited = False
     if user is not None:
         conn.execute(
             "INSERT INTO interactions (user_id, repo_id, kind, updated_at)"
@@ -58,14 +60,10 @@ def get_repo(
             " ON CONFLICT(user_id, repo_id, kind) DO UPDATE SET updated_at = excluded.updated_at",
             (user["id"], repo_id, int(time.time())),
         )
-        kinds = {
-            r["kind"] for r in conn.execute(
-                "SELECT kind FROM interactions WHERE user_id = ? AND repo_id = ?",
-                (user["id"], repo_id),
-            )
-        }
-        liked, favorited = "like" in kinds, "favorite" in kinds
     conn.commit()
+
+    # 重读：views/likes 要含本次浏览（卡片口径实时算,不能拿浏览前的旧行）
+    row = _load(conn, repo_id)
 
     giscus = None
     try:
@@ -73,19 +71,13 @@ def get_repo(
     except github.GitHubError:
         giscus = None  # 获取失败时前端隐藏评论区，不阻塞仓库页
 
-    return RepoDetail(
-        id=row["id"], github_id=row["github_id"], full_name=row["full_name"],
-        owner_login=row["owner_login"], language=row["language"],
-        topics=[t for t in (row["topics"] or "").split(",") if t],
-        stars=row["stars"], license=row["license"], readme_md=row["readme_md"],
-        tagline_zh=row["tagline_zh"], intro_zh=row["intro_zh"], category=row["category"],
-        cover_url=row["cover_url"], source=row["source"], status=row["status"],
-        default_branch=row["default_branch"], published_at=row["published_at"],
+    card = cards.to_card(row)
+    return RepoDetailOut(
+        **card.model_dump(),
+        intro_zh=row["intro_zh"],
         github_url=f"https://github.com/{row['full_name']}",
-        claimed=row["claimed_by"] is not None, liked=liked, favorited=favorited,
-        giscus_repo_id=(giscus or {}).get("repo_id", ""),
-        giscus_category=(giscus or {}).get("category", ""),
-        giscus_category_id=(giscus or {}).get("category_id", ""),
+        default_branch=row["default_branch"],
+        discussions_open=bool(giscus and giscus.get("repo_id")),
     )
 
 
@@ -100,18 +92,35 @@ def _cached_tree(full_name: str, branch: str) -> tuple[tuple, str]:
     return tuple((e["path"], e["type"], e.get("size", 0)) for e in entries), ""
 
 
-@router.get("/repos/{repo_id}/tree", response_model=TreeOut)
+def _to_frontend_tree(rows: list[dict]) -> list[dict]:
+    """GitHub 递归树按父先子后返回;blob/tree 转前端 file/dir 并组装 children。"""
+    roots: list[dict] = []
+    index: dict[str, dict] = {}
+    for e in rows:
+        node = {"name": e["path"].rsplit("/", 1)[-1], "path": e["path"],
+                "type": "file" if e["type"] == "blob" else "dir"}
+        if node["type"] == "dir":
+            node["children"] = []
+        index[e["path"]] = node
+        parent_path, _, _ = e["path"].rpartition("/")
+        parent = index.get(parent_path) if parent_path else None
+        (parent["children"] if parent else roots).append(node)
+    return roots
+
+
+# exclude_unset：file 节点不带 children 键,dir 节点始终带(含空目录)
+@router.get("/repos/{repo_id}/tree", response_model=list[TreeItem],
+            response_model_exclude_unset=True)
 def get_repo_tree(
     repo_id: int, conn: sqlite3.Connection = Depends(get_conn)
-) -> TreeOut:
+) -> list[TreeItem]:
     row = _load(conn, repo_id)
     try:
-        packed, error = _cached_tree(row["full_name"], row["default_branch"])
+        packed, _ = _cached_tree(row["full_name"], row["default_branch"])
     except github.GitHubError as exc:
-        packed, error = (), f"暂时无法读取文件列表：{exc}"
-    return TreeOut(
-        entries=[TreeEntry(path=p, type=t, size=s) for p, t, s in packed], error=error
-    )
+        raise HTTPException(status_code=502, detail=f"暂时无法读取文件列表:{exc}") from exc
+    rows = [{"path": p, "type": t, "size": s} for p, t, s in packed]
+    return [TreeItem(**n) for n in _to_frontend_tree(rows)]
 
 
 @lru_cache(maxsize=config.FILE_CACHE_SIZE)
@@ -127,19 +136,36 @@ def _cached_file(full_name: str, path: str, branch: str) -> tuple[str, str]:
     return content, ""
 
 
-@router.get("/repos/{repo_id}/files", response_model=FileOut)
+@router.get("/repos/{repo_id}/files", response_model=RepoFileOut)
 def get_repo_file(
     repo_id: int,
     path: str = Query(...),
     conn: sqlite3.Connection = Depends(get_conn),
-) -> FileOut:
+) -> RepoFileOut:
     row = _load(conn, repo_id)
     safe = _safe_path(path)
     try:
         content, error = _cached_file(row["full_name"], safe, row["default_branch"])
     except github.GitHubError as exc:
-        content, error = "", f"暂时无法读取该文件：{exc}"
-    return FileOut(
-        path=safe, content=content, error=error,
-        github_url=f"https://github.com/{row['full_name']}/blob/{row['default_branch']}/{safe}",
-    )
+        raise HTTPException(status_code=502, detail=f"暂时无法读取该文件:{exc}") from exc
+    if error:
+        # 二进制/截断是确定性结果,不是瞬时故障:422 让前端走错误提示而不是空文件
+        raise HTTPException(status_code=422, detail=error)
+    return RepoFileOut(path=safe, content=content)
+
+
+@router.get("/repos/{repo_id}/related", response_model=list[RepoCardOut])
+def related(
+    repo_id: int, conn: sqlite3.Connection = Depends(get_conn)
+) -> list[RepoCardOut]:
+    """同分类按 score 取前 N;mock 契约有、worktree 漏实现,此处补齐(spec 第 4 节)。"""
+    row = _load(conn, repo_id)
+    now = int(time.time())
+    rows = conn.execute(
+        cards._card_select("FROM repos r")
+        + " WHERE r.status != 'delisted' AND r.category = ? AND r.id != ?"
+        " ORDER BY r.published_at DESC LIMIT ?",
+        (row["category"], repo_id, config.FEED_CANDIDATE_LIMIT),
+    ).fetchall()
+    ranked = sorted(rows, key=lambda r: ranking.score(r, now), reverse=True)
+    return [cards.to_card(r) for r in ranked[: config.RELATED_LIMIT]]

@@ -26,21 +26,6 @@ class UserOut(BaseModel):
     bio: str = ""
 
 
-class RepoCard(BaseModel):
-    """卡片流单项。前端据 language/topics 渲染 SVG 封面，cover_url 非空则优先。"""
-    id: int
-    full_name: str
-    owner_login: str
-    language: str = ""
-    topics: list[str] = Field(default_factory=list)
-    stars: int = 0
-    tagline_zh: str = ""
-    category: str = "其他"
-    cover_url: str = ""
-    source: str
-    published_at: int = 0
-
-
 class RepoCardOut(BaseModel):
     """对齐前端 RepoCardData:见 spec 第 4 节映射表。"""
     id: int
@@ -68,50 +53,25 @@ class SearchOut(FeedOut):
     total: int
 
 
-class RepoDetail(BaseModel):
-    id: int
-    github_id: int
-    full_name: str
-    owner_login: str
-    language: str = ""
-    topics: list[str] = Field(default_factory=list)
-    stars: int = 0
-    license: str = ""
-    readme_md: str = ""
-    tagline_zh: str = ""
+class RepoDetailOut(RepoCardOut):
+    """仓库详情 = 卡片全字段 + 详情页补充；不再含 readme_md/giscus_*。"""
     intro_zh: str = ""
-    category: str = "其他"
-    cover_url: str = ""
-    source: str
-    status: str
+    github_url: str
     default_branch: str = "main"
-    published_at: int = 0
-    github_url: str
-    claimed: bool = False
-    liked: bool = False
-    favorited: bool = False
-    # giscus 评论区元数据；空字符串表示仓库未启用 Discussions 或获取失败
-    giscus_repo_id: str = ""
-    giscus_category: str = ""
-    giscus_category_id: str = ""
+    discussions_open: bool = False
 
 
-class TreeEntry(BaseModel):
+class TreeItem(BaseModel):
+    """前端文件树节点：blob→file、tree→dir，children 组成嵌套。"""
+    name: str
     path: str
-    type: str
-    size: int = 0
+    type: str  # 'file' | 'dir'
+    children: list["TreeItem"] = Field(default_factory=list)
 
 
-class TreeOut(BaseModel):
-    entries: list[TreeEntry]
-    error: str = ""
-
-
-class FileOut(BaseModel):
+class RepoFileOut(BaseModel):
     path: str
-    content: str = ""
-    github_url: str
-    error: str = ""
+    content: str
 
 
 class MyRepoOut(BaseModel):
