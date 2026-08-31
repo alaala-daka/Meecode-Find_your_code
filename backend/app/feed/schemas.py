@@ -1,7 +1,7 @@
 """Pydantic 模型：LLM 结构化输出 + API 出入参。"""
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class ScreeningResult(BaseModel):
@@ -109,6 +109,19 @@ class SubmitIn(BaseModel):
     intro_zh: str = ""
     category: str = "其他"
     cover_url: str = ""
+
+    @field_validator("cover_url")
+    @classmethod
+    def _check_cover_url(cls, v: str) -> str:
+        """封面以 <img src> 直出,不校验就是存储型 XSS/钓鱼向量。"""
+        v = v.strip()
+        if not v:
+            return ""
+        if not (v.startswith("http://") or v.startswith("https://")):
+            raise ValueError("cover_url 必须是 http(s) 链接")
+        if len(v) > 500:
+            raise ValueError("cover_url 过长(上限 500 字符)")
+        return v
 
 
 class DraftIn(BaseModel):

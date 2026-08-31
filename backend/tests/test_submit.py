@@ -206,3 +206,24 @@ def test_ai_draft_failure_returns_empty_not_500(client, login, monkeypatch):
     resp = client.post("/api/ai-draft", json={"github_id": 90001})
     assert resp.status_code == 200
     assert resp.json()["tagline_zh"] == ""  # 前端提示手写
+
+
+import pytest as _pytest
+from pydantic import ValidationError
+
+from app.feed.schemas import SubmitIn
+
+
+def test_cover_url_rejects_non_http():
+    with _pytest.raises(ValidationError):
+        SubmitIn(github_id=90001, tagline_zh="x", cover_url="javascript:alert(1)")
+
+
+def test_cover_url_rejects_too_long():
+    with _pytest.raises(ValidationError):
+        SubmitIn(github_id=90001, tagline_zh="x", cover_url="https://" + "a" * 500)
+
+
+def test_cover_url_accepts_https_and_empty():
+    assert SubmitIn(github_id=90001, tagline_zh="x", cover_url="https://x/y.png").cover_url
+    assert SubmitIn(github_id=90001, tagline_zh="x", cover_url="").cover_url == ""
