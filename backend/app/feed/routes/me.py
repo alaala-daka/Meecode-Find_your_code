@@ -37,6 +37,7 @@ def oauth_entry() -> RedirectResponse:
     resp.set_cookie(
         OAUTH_STATE_COOKIE, state,
         max_age=600, httponly=True, samesite="lax",
+        secure=not config.GITHUB_MOCK,  # 生产(HTTPS)强制安全 cookie
     )
     return resp
 
@@ -65,6 +66,7 @@ def oauth_callback(
     resp.set_cookie(
         config.SESSION_COOKIE, auth.sign(user_id),
         max_age=config.SESSION_MAX_AGE, httponly=True, samesite="lax",
+        secure=not config.GITHUB_MOCK,
     )
     return resp
 

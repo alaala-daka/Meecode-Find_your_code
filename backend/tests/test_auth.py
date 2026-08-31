@@ -62,3 +62,32 @@ def test_upsert_user_preserves_bio(conn):
     conn.execute("UPDATE users SET bio = '我的签名' WHERE id = ?", (uid,))
     auth.upsert_user(conn, gh)
     assert conn.execute("SELECT bio FROM users WHERE id = ?", (uid,)).fetchone()["bio"] == "我的签名"
+
+
+def test_ensure_prod_secrets_rejects_default(monkeypatch):
+    monkeypatch.setattr(config, "GITHUB_MOCK", False, raising=False)
+    monkeypatch.setattr(config, "SESSION_SECRET", "dev-only-insecure-secret", raising=False)
+    with pytest.raises(RuntimeError, match="SESSION_SECRET"):
+        config.ensure_prod_secrets()
+
+
+def test_ensure_prod_secrets_passes(monkeypatch):
+    monkeypatch.setattr(config, "GITHUB_MOCK", True, raising=False)
+    monkeypatch.setattr(config, "SESSION_SECRET", "dev-only-insecure-secret", raising=False)
+    config.ensure_prod_secrets()  # mock 模式放行
+    monkeypatch.setattr(config, "GITHUB_MOCK", False, raising=False)
+    monkeypatch.setattr(config, "SESSION_SECRET", "a-real-secret", raising=False)
+    config.ensure_prod_secrets()  # 已配置放行
+
+
+def test_session_cookie_secure_in_prod(monkeypatch):
+    """非 mock 模式下发的 OAuth state cookie 必须带 Secure(会话 cookie 同理,同一写法)。"""
+    from app.feed.routes import me
+
+    monkeypatch.setattr(config, "GITHUB_MOCK", False, raising=False)
+    resp = me.oauth_entry()
+    assert "secure" in resp.headers["set-cookie"].lower()
+
+    monkeypatch.setattr(config, "GITHUB_MOCK", True, raising=False)
+    resp = me.oauth_entry()
+    assert "secure" not in resp.headers["set-cookie"].lower()
