@@ -148,3 +148,34 @@ def test_exchange_oauth_code_non_json(monkeypatch):
     monkeypatch.setattr(github.httpx, "post", lambda *a, **k: resp)
     with pytest.raises(github.GitHubError, match="非 JSON"):
         github.exchange_oauth_code("code")
+
+
+def test_batch_network_error_backoff_not_capped(monkeypatch):
+    """批量路径网络错误退避保持 2/4/6s 递进,不被 2.0s 封顶(task3 review 裁决)。"""
+    sleeps: list[float] = []
+    monkeypatch.setattr(github.time, "sleep", sleeps.append)
+    monkeypatch.setattr(github.config, "GITHUB_MOCK", False, raising=False)
+    monkeypatch.setattr(github.config, "GITHUB_TOKEN", "t", raising=False)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("boom", request=request)
+
+    monkeypatch.setattr(github, "_client", lambda: httpx.Client(
+        transport=httpx.MockTransport(handler)))
+    with pytest.raises(github.GitHubError):
+        github.get_readme("a/b")
+    assert sleeps == [2.0, 4.0, 6.0]
+
+
+def test_interactive_readme_no_sleep_on_rate_limit(monkeypatch):
+    """get_readme 透传 interactive:投稿/ai-draft 网页路径限流立即抛错(task3 review 裁决)。"""
+    sleeps: list[float] = []
+    monkeypatch.setattr(github.time, "sleep", sleeps.append)
+    monkeypatch.setattr(github.config, "GITHUB_MOCK", False, raising=False)
+    resp = httpx.Response(429, headers={"X-RateLimit-Remaining": "0", "Retry-After": "60"},
+                          request=httpx.Request("GET", "https://x"))
+    monkeypatch.setattr(github, "_client", lambda: httpx.Client(
+        transport=httpx.MockTransport(lambda req: resp)))
+    with pytest.raises(github.GitHubError):
+        github.get_readme("a/b", interactive=True)
+    assert sleeps == []

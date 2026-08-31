@@ -81,10 +81,12 @@ def submit(
         raise HTTPException(status_code=403, detail="只能投稿自己拥有的仓库")
 
     # README / 文件树拉不到也要能发布：作者文案已足够展示
+    # 网页请求路径:GitHub 故障快速失败降级,不按批量重试挂起请求
     readme, tree = "", []
     try:
-        readme = github.get_readme(gh["full_name"])
-        tree = github.get_tree(gh["full_name"], gh.get("default_branch", "main"))
+        readme = github.get_readme(gh["full_name"], interactive=True)
+        tree = github.get_tree(gh["full_name"], gh.get("default_branch", "main"),
+                               interactive=True)
     except github.GitHubError as exc:
         print(f"[submit] {gh['full_name']} 元数据拉取失败，继续发布：{exc}")
 
@@ -164,8 +166,9 @@ def ai_draft(
     user = auth.require_user(request, conn)
     gh = _own_repo(user["login"], body.github_id)
     try:
-        readme = github.get_readme(gh["full_name"])
-        tree = github.get_tree(gh["full_name"], gh.get("default_branch", "main"))
+        readme = github.get_readme(gh["full_name"], interactive=True)
+        tree = github.get_tree(gh["full_name"], gh.get("default_branch", "main"),
+                               interactive=True)
         result = screening.screen_repo(gh["full_name"], readme, tree)
     except Exception as exc:
         print(f"[ai-draft] {gh['full_name']} 草稿生成失败：{exc}")

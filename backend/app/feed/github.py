@@ -19,7 +19,6 @@ MAX_RETRIES = 3
 DEFAULT_BACKOFF = 2.0
 TIMEOUT = 20.0
 INTERACTIVE_RETRIES = 1     # 交互路径:网页请求不该为 GitHub 事故挂起
-INTERACTIVE_MAX_WAIT = 2.0
 _shared_client: httpx.Client | None = None
 
 
@@ -63,7 +62,7 @@ def _get(path: str, params: dict | None = None, *,
             last = f"网络错误:{exc}"
             if interactive:
                 break
-            time.sleep(min(DEFAULT_BACKOFF * (attempt + 1), INTERACTIVE_MAX_WAIT))
+            time.sleep(DEFAULT_BACKOFF * (attempt + 1))
             continue
         if resp.status_code == 404 and allow_404:
             return None
@@ -175,11 +174,11 @@ def _ts(value: str | None) -> int:
                .replace(tzinfo=timezone.utc).timestamp())
 
 
-def get_readme(full_name: str) -> str:
+def get_readme(full_name: str, *, interactive: bool = False) -> str:
     """README 缺失返回空串（由粗筛判定淘汰），不抛异常。"""
     if config.GITHUB_MOCK:
         return mock.mock_readme(full_name)
-    data = _get(f"/repos/{full_name}/readme", allow_404=True)
+    data = _get(f"/repos/{full_name}/readme", allow_404=True, interactive=interactive)
     if not data:
         return ""
     if data.get("encoding") == "base64":
