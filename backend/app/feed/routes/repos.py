@@ -96,7 +96,7 @@ def _cached_tree(full_name: str, branch: str) -> tuple[tuple, str]:
     GitHubError 直接往外抛：lru_cache 不缓存抛异常的调用，
     降级结果不会卡在缓存里，下次请求自然重试。
     """
-    entries = github.get_tree(full_name, branch)
+    entries = github.get_tree(full_name, branch, interactive=True)
     return tuple((e["path"], e["type"], e.get("size", 0)) for e in entries), ""
 
 
@@ -119,7 +119,7 @@ def _cached_file(full_name: str, path: str, branch: str) -> tuple[str, str]:
     """缓存文件内容。GitHubError 往外抛（不进缓存）；
     二进制判定与截断由内容决定，结果可安全缓存。
     """
-    content = github.get_file(full_name, path, branch)
+    content = github.get_file(full_name, path, branch, interactive=True)
     if "\x00" in content[:4096]:
         return "", "该文件为二进制，请到 GitHub 查看"
     if len(content) > config.MAX_FILE_CHARS:

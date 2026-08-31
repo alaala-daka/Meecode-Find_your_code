@@ -78,3 +78,73 @@ def test_search_query_carries_spec_filters(monkeypatch):
     assert "fork:false" in seen["q"]
     assert f"stars:>={github.config.CRAWL_MIN_STARS}" in seen["q"]
     assert "created:>=" in seen["q"]
+
+
+def test_retry_after_non_numeric_falls_back():
+    headers = httpx.Headers({"Retry-After": "Wed, 21 Oct 2026 07:28:00 GMT"})
+    assert github._retry_after(headers, 2.0) == 2.0
+    assert github._retry_after(httpx.Headers({"Retry-After": "7"}), 2.0) == 7.0
+    assert github._retry_after(httpx.Headers({}), 2.0) == 2.0
+
+
+def test_shared_client_is_reused(monkeypatch):
+    monkeypatch.setattr(github.config, "GITHUB_TOKEN", "", raising=False)
+    github._shared_client = None
+    assert github._client() is github._client()
+
+
+def test_interactive_path_no_sleep_on_rate_limit(monkeypatch):
+    """交互路径限流立即抛错,不 sleep(否则线程池被 GitHub 事故拖死)。"""
+    sleeps: list[float] = []
+    monkeypatch.setattr(github.time, "sleep", sleeps.append)
+    resp = httpx.Response(429, headers={"X-RateLimit-Remaining": "0", "Retry-After": "60"},
+                          request=httpx.Request("GET", "https://x"))
+    monkeypatch.setattr(github, "_client", lambda: httpx.Client(
+        transport=httpx.MockTransport(lambda req: resp)))
+    with pytest.raises(github.GitHubError):
+        github.get_file("a/b", "README.md", interactive=True)
+    assert sleeps == []
+
+
+def test_batch_path_sleeps_then_gives_up(monkeypatch):
+    sleeps: list[float] = []
+    monkeypatch.setattr(github.time, "sleep", sleeps.append)
+    resp = httpx.Response(429, headers={"X-RateLimit-Remaining": "0", "Retry-After": "60"},
+                          request=httpx.Request("GET", "https://x"))
+    monkeypatch.setattr(github, "_client", lambda: httpx.Client(
+        transport=httpx.MockTransport(lambda req: resp)))
+    with pytest.raises(github.GitHubError):
+        github.get_readme("a/b")
+    assert len(sleeps) >= 1
+
+
+def test_list_user_repos_paginates(monkeypatch):
+    def make_items(start: int, n: int) -> list[dict]:
+        return [{"id": start + i, "full_name": f"o/r{start + i}", "owner": {"login": "o"},
+                 "language": "Python", "topics": [], "stargazers_count": 1,
+                 "created_at": "2026-08-01T00:00:00Z", "pushed_at": "2026-08-01T00:00:00Z",
+                 "license": None, "default_branch": "main", "archived": False}
+                for i in range(n)]
+
+    calls: list[int] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        page = int(request.url.params["page"])
+        calls.append(page)
+        return httpx.Response(200, json=make_items(1000 * page, 100 if page == 1 else 30))
+
+    monkeypatch.setattr(github.config, "GITHUB_MOCK", False, raising=False)
+    monkeypatch.setattr(github, "_client", lambda: httpx.Client(
+        transport=httpx.MockTransport(handler)))
+    repos = github.list_user_repos("o")
+    assert calls == [1, 2]
+    assert len(repos) == 130
+
+
+def test_exchange_oauth_code_non_json(monkeypatch):
+    monkeypatch.setattr(github.config, "GITHUB_MOCK", False, raising=False)
+    resp = httpx.Response(502, text="<html>bad gateway</html>",
+                          request=httpx.Request("POST", "https://x"))
+    monkeypatch.setattr(github.httpx, "post", lambda *a, **k: resp)
+    with pytest.raises(github.GitHubError, match="非 JSON"):
+        github.exchange_oauth_code("code")

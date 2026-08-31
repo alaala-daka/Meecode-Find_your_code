@@ -17,6 +17,9 @@ def _clear_github_caches():
 
     feed_repos._cached_tree.cache_clear()
     feed_repos._cached_file.cache_clear()
+    from app.feed import github as feed_github
+
+    feed_github._shared_client = None
     yield
 
 

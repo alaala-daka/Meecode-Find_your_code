@@ -18,6 +18,9 @@ from . import mock
 MAX_RETRIES = 3
 DEFAULT_BACKOFF = 2.0
 TIMEOUT = 20.0
+INTERACTIVE_RETRIES = 1     # 交互路径:网页请求不该为 GitHub 事故挂起
+INTERACTIVE_MAX_WAIT = 2.0
+_shared_client: httpx.Client | None = None
 
 
 class GitHubError(RuntimeError):
@@ -25,35 +28,56 @@ class GitHubError(RuntimeError):
 
 
 def _client() -> httpx.Client:
-    headers = {"Accept": "application/vnd.github+json", "User-Agent": "meecode"}
-    if config.GITHUB_TOKEN:
-        headers["Authorization"] = f"Bearer {config.GITHUB_TOKEN}"
-    # 绝对 URL：httpx 对相对 URL 做 cookie 提取会崩（urllib 要求绝对地址），
-    # 测试注入无 base_url 的 MockTransport 客户端也照常工作。
-    return httpx.Client(headers=headers, timeout=TIMEOUT)
+    """进程级共享连接池:每请求新建客户端 = 每次重新 TLS 握手,爬取数百仓库时开销显著。
+    测试直接 monkeypatch 本函数注入 MockTransport 客户端即可。"""
+    global _shared_client
+    if _shared_client is None:
+        headers = {"Accept": "application/vnd.github+json", "User-Agent": "meecode"}
+        if config.GITHUB_TOKEN:
+            headers["Authorization"] = f"Bearer {config.GITHUB_TOKEN}"
+        _shared_client = httpx.Client(headers=headers, timeout=TIMEOUT)
+    return _shared_client
 
 
-def _get(path: str, params: dict | None = None, *, allow_404: bool = False) -> dict | list | None:
+def _retry_after(headers: httpx.Headers, fallback: float) -> float:
+    """Retry-After 规范允许 HTTP-date 形式,float() 会炸,一律兜回退避值。"""
+    raw = headers.get("Retry-After")
+    if not raw:
+        return fallback
+    try:
+        return max(0.0, float(raw))
+    except ValueError:
+        return fallback
+
+
+def _get(path: str, params: dict | None = None, *,
+         allow_404: bool = False, interactive: bool = False) -> dict | list | None:
+    """interactive=True 用于网页请求路径:限流立即抛错不等待,重试至多 1 次;
+    批量路径(爬取)保持满配重试与退避。"""
+    retries = INTERACTIVE_RETRIES if interactive else MAX_RETRIES
     last = ""
-    for attempt in range(MAX_RETRIES):
+    for attempt in range(retries):
         try:
-            with _client() as c:
-                resp = c.get(f"{config.GITHUB_API}{path}", params=params)
+            resp = _client().get(f"{config.GITHUB_API}{path}", params=params)
         except httpx.HTTPError as exc:
-            last = f"网络错误：{exc}"
-            time.sleep(DEFAULT_BACKOFF * (attempt + 1))
+            last = f"网络错误:{exc}"
+            if interactive:
+                break
+            time.sleep(min(DEFAULT_BACKOFF * (attempt + 1), INTERACTIVE_MAX_WAIT))
             continue
         if resp.status_code == 404 and allow_404:
             return None
         if resp.status_code in (403, 429) and resp.headers.get("X-RateLimit-Remaining") == "0":
-            wait = float(resp.headers.get("Retry-After", DEFAULT_BACKOFF * (attempt + 1)))
-            last = f"触发限流（剩余配额 0），已等待 {wait}s"
+            wait = _retry_after(resp.headers, DEFAULT_BACKOFF * (attempt + 1))
+            last = f"触发限流(剩余配额 0),需等待 {wait}s"
+            if interactive:
+                break
             time.sleep(wait)
             continue
         if resp.status_code >= 400:
-            raise GitHubError(f"GitHub {resp.status_code}：{resp.text[:200]}")
+            raise GitHubError(f"GitHub {resp.status_code}:{resp.text[:200]}")
         return resp.json()
-    raise GitHubError(f"GitHub 重试 {MAX_RETRIES} 次仍失败：{last}")
+    raise GitHubError(f"GitHub 重试 {retries} 次仍失败:{last}")
 
 
 def _graphql(query: str, variables: dict) -> dict:
@@ -163,11 +187,12 @@ def get_readme(full_name: str) -> str:
     return data.get("content", "")
 
 
-def get_tree(full_name: str, branch: str = "main") -> list[dict]:
+def get_tree(full_name: str, branch: str = "main", *,
+             interactive: bool = False) -> list[dict]:
     if config.GITHUB_MOCK:
         return mock.mock_tree(full_name)
     data = _get(f"/repos/{full_name}/git/trees/{branch}",
-                {"recursive": "1"}, allow_404=True)
+                {"recursive": "1"}, allow_404=True, interactive=interactive)
     if not data:
         return []
     return [
@@ -176,11 +201,13 @@ def get_tree(full_name: str, branch: str = "main") -> list[dict]:
     ]
 
 
-def get_file(full_name: str, path: str, branch: str = "main") -> str:
+def get_file(full_name: str, path: str, branch: str = "main", *,
+             interactive: bool = False) -> str:
     """按需取单个文件内容 —— 代替 clone，见 Global Constraints。"""
     if config.GITHUB_MOCK:
         return mock.mock_file(full_name, path)
-    data = _get(f"/repos/{full_name}/contents/{path}", {"ref": branch}, allow_404=True)
+    data = _get(f"/repos/{full_name}/contents/{path}", {"ref": branch},
+                allow_404=True, interactive=interactive)
     if not data or data.get("encoding") != "base64":
         return ""
     return base64.b64decode(data.get("content", "")).decode("utf-8", "replace")
@@ -193,12 +220,20 @@ def get_user(login: str) -> dict:
 
 
 def list_user_repos(login: str) -> list[dict]:
-    """列出用户自己拥有的公开仓库，供投稿页勾选。"""
+    """列出用户自己拥有的公开仓库,供投稿页勾选;翻页拉全(>100 仓库的作者也要能投稿)。"""
     if config.GITHUB_MOCK:
         return mock.mock_repos()
-    data = _get(f"/users/{login}/repos",
-                {"type": "owner", "sort": "updated", "per_page": 100})
-    return [_normalize(item) for item in (data or [])]
+    out: list[dict] = []
+    page = 1
+    while True:
+        data = _get(f"/users/{login}/repos",
+                    {"type": "owner", "sort": "updated", "per_page": 100, "page": page})
+        items = data or []
+        out.extend(_normalize(item) for item in items)
+        if len(items) < 100 or page >= 10:  # 10 页 = 1000 仓库,投稿场景足够
+            break
+        page += 1
+    return out
 
 
 def exchange_oauth_code(code: str) -> str:
@@ -218,7 +253,11 @@ def exchange_oauth_code(code: str) -> str:
         )
     except httpx.HTTPError as exc:
         raise GitHubError(f"OAuth 换取 token 失败：{exc}") from exc
-    token = resp.json().get("access_token", "")
+    try:
+        payload = resp.json()
+    except ValueError as exc:
+        raise GitHubError(f"OAuth 响应非 JSON:{resp.text[:200]}") from exc
+    token = payload.get("access_token", "")
     if not token:
         raise GitHubError("OAuth 未返回 access_token，请检查 client 配置")
     return token
