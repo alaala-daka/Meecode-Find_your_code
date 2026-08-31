@@ -61,7 +61,10 @@ def my_github_repos(
     existing = {
         r["github_id"]: r["status"]
         for r in conn.execute(
-            "SELECT github_id, status FROM repos WHERE owner_login = ?", (user["login"],)
+            # 排除 delisted:徽标契约只有 ''|published|pending_claim 三态,
+            # 且下架后允许重新投稿,该仓库理应回落到「未投稿」而不是泄漏第 4 种状态
+            "SELECT github_id, status FROM repos"
+            " WHERE owner_login = ? AND status != 'delisted'", (user["login"],)
         )
     }
     out: list[MyGithubRepoOut] = []

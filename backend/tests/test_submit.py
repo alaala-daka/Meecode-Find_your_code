@@ -251,6 +251,23 @@ def test_my_github_repos_shape(client, login, conn, monkeypatch):
     assert all("github_id" in r for r in body)
 
 
+def test_my_github_repos_masks_delisted_as_unsubmitted(client, login, conn, monkeypatch):
+    """三态徽标契约只有 ''|published|pending_claim:已下架的仓库必须回落到 '',
+    下架后允许重新投稿,前端据此把按钮恢复成「投稿」。"""
+    monkeypatch.setattr(github, "list_user_repos", lambda login_: [
+        {"id": 9, "full_name": "demo/gone", "owner_login": "demo", "language": "Go",
+         "topics": [], "stars": 1, "created_at": NOW, "pushed_at": NOW,
+         "license": "", "default_branch": "main"},
+    ])
+    conn.execute(
+        "INSERT INTO repos (github_id, full_name, owner_login, source, status)"
+        " VALUES (9, 'demo/gone', 'demo', 'submitted', 'delisted')"
+    )
+    conn.commit()
+    mine = {r["full_name"]: r for r in client.get("/api/my/github-repos").json()}
+    assert mine["demo/gone"]["status"] == ""
+
+
 def test_submit_by_full_name_returns_card(client, login, conn, monkeypatch):
     monkeypatch.setattr(github, "list_user_repos", lambda login_: [
         {"id": 7, "full_name": "demo/mine", "owner_login": "demo", "language": "Go",
